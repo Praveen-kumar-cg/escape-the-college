@@ -6,40 +6,54 @@
 [![Vanilla JS](https://img.shields.io/badge/Vanilla-JavaScript-yellow?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![HTML5 Canvas](https://img.shields.io/badge/HTML5-Canvas-orange?style=for-the-badge&logo=html5)](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
 [![Web Audio API](https://img.shields.io/badge/Audio-Web%20Audio%20API-purple?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+[![PWA Ready](https://img.shields.io/badge/PWA-100%25%20Offline-green?style=for-the-badge&logo=pwa)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 
 ---
 
 ## 🕹️ Play Live in Your Browser
 👉 **[https://praveen-kumar-cg.github.io/escape-the-college/](https://praveen-kumar-cg.github.io/escape-the-college/)**
 
-*Tip: Supports Desktop, Mobile phones (landscape touch D-pad), and Classroom Projectors (1-click fullscreen mode).*
+*Tip: Supports Desktop Keyboard (WASD/Arrows), Touch Virtual Joystick on Mobile Phones, and Classroom Projectors (1-click fullscreen mode).*
+
+> **Note on GitHub Pages 404:**
+> If you see a `404 - There isn't a GitHub Pages site here`, enable GitHub Pages in your repo settings:
+> 1. Go to repository **Settings** -> **Pages** (or visit `https://github.com/Praveen-kumar-cg/escape-the-college/settings/pages`).
+> 2. Under **Build and deployment** -> **Source**, choose **Deploy from a branch**.
+> 3. Under **Branch**, select `main` and folder `/ (root)`, then click **Save**.
+> 4. In ~60 seconds, your site will be live at the link above!
 
 ---
 
 ## 📖 Story & Gameplay Arc
-You fell asleep in the campus library and woke up trapped inside at midnight! To graduate, you must survive **3 rising semesters of academic chaos**:
+You fell asleep in the campus library and woke up trapped inside at midnight! To escape and graduate, you must survive academic chaos across multiple difficulty levels:
 
-1. **Semester 1: Freshers' Midnight** (90s timer) — Learn the campus, find 3 keys, and dodge patrolling proctors.
-2. **Semester 2: Mid-Term Mayhem** (75s timer) — Tighter corridors, faster professors, and eerie flickering emergency lights.
-3. **Finals Week: The Graduation Heist** (60s timer) — Extreme security! Dean Strictlaw is on patrol with high-speed exam papers and atmospheric flashlight blackout vision!
+* 📚 **Procedural Corridors:** Every run creates a brand-new campus layout with themed rooms: Library, Computer Lab, Faculty Lounge, Study Hall, and Lecture Hall.
+* 👹 **Diverse Campus Threats:**
+  * **Patrolling Professor:** Sweeps an illuminated vision beam back and forth.
+  * **Chief Warden:** Fast chaser detecting you within lantern light.
+  * **Ghost Senior:** Phases through solid walls and flickers in and out of sight.
+  * **Assignment Drone:** Self-guided drone homing in and detonating on contact!
+* 👑 **Boss Fight — The Final Exam:** When all 3 campus keys are collected, the Dean appears at the exit gate! Dodge falling exam papers, spreading circles of "F" grades, and charging attacks while collecting 3 Answer Keys to defeat the boss and unlock freedom!
 
 ---
 
-## ⚡ Key Features
+## ⚡ Game Features
 
-* 🔀 **Procedural Map Generation on Every Try:** Every single run generates a **completely new layout, dynamic doorways, internal room obstacles, and randomized navigation routes**—you never play the exact same design twice!
-* 🏛️ **Themed Floors & Room Popups:** Distinct visual themes for each room—Library (warm wood & bookshelves), Computer Lab (cyan glow & flickering monitors), Faculty Lounge (royal purple carpet), Lecture Hall (collegiate cyan desks), and Main Hallway (checkered tiles with glowing neon strips)—plus instant *"Entered: [Room]"* HUD notifications.
-* 🔦 **Flashlight & Spooky Ambient Vignette:** Soft radial player flashlight cone with atmospheric darkness vignette that tightens in difficulty during Semesters 2 and 3.
-* 🧭 **Beacon Guide Arrow & Corner Radar Minimap:** Sleek cyber beacon orbiting the player pointing directly to the nearest key (or to the exit gate once unlocked) paired with a live real-time HUD Radar minimap.
-* 💥 **Hit & Pickup Effects:** Screen shake and red perimeter flash on damage, floating arcade numbers (`-20 HP`, `+150 PTS`, `Key found! 🔑`), particle bursts on collectible pickups, and ghost player motion trails.
-* 📜 **Desktop Incident Feed & Session Best:** Live event logging feed with timestamps recording every campus incident, room entry, and power-up activation, alongside your session high score.
-* 🛡️ **Attendance 75% Shield:** Collect glowing shields to absorb an enemy strike with 0 damage.
-* 👻 **Proxy Attendance (Invisibility):** Grab the proxy hall pass to become translucent and invincible to all obstacles for 3 seconds!
-* 🚪 **Animated Emerald Exit Portal:** Once all 3 keys are gathered, the exit gate animates into an active glowing green freedom portal.
-* ☕ **Hot Coffee Boosts:** Sip coffee to restore **+25 HP** and boost your score.
-* 🎵 **Procedural Spooky BGM & Web Audio:** Eerie atmospheric drone and mysterious midnight bell chimes synthesized in real-time with zero audio files to download.
-* 📱 **Flawless Phone & Projector Support:** Responsive on-screen sliding D-Pad for mobile and dedicated **⛶ Fullscreen** mode for projectors.
-* 🔒 **100% In-Memory (RAM Only):** All game metrics and session high scores remain strictly in browser RAM—**zero cookies, zero tracking, and zero laptop disk/localStorage footprint**.
+* 🔀 **Procedural Map Generation:** New layout, doors, obstacles, and navigation routes on every single run.
+* 📅 **Daily Challenge Mode:** Generates the exact same layout and enemy spawns for everyone on that date based on a seeded PRNG, with one-click clipboard sharing (`Escape the College Daily 31 Oct: escaped in 01:12, 940 pts`).
+* 🎯 **4 Difficulty Presets:** Fresher (Easy), Backbencher (Normal), Topper (Hard), and Final Year (Nightmare, with optional 💀 One-Hit Ends Run).
+* 🛡️ **5 Strategic Power-Ups:**
+  * 👻 **Proxy Attendance:** Invisible and invincible for 5s.
+  * ⚡ **Energy Drink:** +60% speed sprint for 6s.
+  * 📝 **Cheat Notes:** Sky beacons pinpointing all hidden keys for 5s.
+  * ❄️ **Bunk Pass:** Freezes all campus enemies in ice for 3s.
+  * 🛡️ **Attendance Shield:** Absorbs an enemy strike with 0 damage.
+* 🌪️ **Random Dynamic Events (~every 30s):** Power Cut blackout, Surprise Test (+40% enemy speed), and Canteen Open (bonus coffee drops).
+* 🏆 **Achievements & Career Stats:** Unlock 6 badges (Zero Damage Escape, Caffeine Addict, Speedrunner, Boss Slayer, Ghost Buster, Night Owl) and track best times and scores in `localStorage` under `etc_`.
+* 🧥 **Unlockable Student Skins:** Choose between Classic Hoodie, Academic Topper, and Stealth Ninja.
+* 🎬 **Cinematic Midnight Intro & Endings:** Skippable retro typewriter intro cutscene with humorous win/loss credits.
+* 🎵 **Procedural Web Audio:** Spooky ambient drone, footsteps synthesizer, accelerating heartbeat under pressure, and fast boss theme arpeggio with master volume slider and mute controls.
+* 📱 **Mobile Touch Joystick & PWA:** Smooth 360° virtual joystick, haptic vibration on hits (`navigator.vibrate`), and 100% offline gameplay via `manifest.json` and `sw.js`.
 
 ---
 
@@ -48,13 +62,14 @@ You fell asleep in the campus library and woke up trapped inside at midnight! To
 ### Desktop Keyboard
 | Key | Action |
 | :--- | :--- |
-| <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or <kbd>▲</kbd> <kbd>◄</kbd> <kbd>▼</kbd> <kbd>►</kbd> | Move Student (Smooth 8-directional movement) |
+| <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or <kbd>▲</kbd> <kbd>◄</kbd> <kbd>▼</kbd> <kbd>►</kbd> | Move Student (8-directional) |
 | <kbd>P</kbd> or <kbd>Esc</kbd> | Pause / Resume Game |
-| <kbd>R</kbd> | Quick Restart (Generates a new procedural map!) |
+| <kbd>R</kbd> | Quick Restart (Generates brand-new map) |
+| <kbd>Space</kbd> / <kbd>Enter</kbd> | Skip Intro Cutscene |
 
-### Mobile & Projector
-* **Sliding Touch D-Pad:** Ergonomic virtual controller optimized for thumb movement on mobile devices.
-* **⛶ Fullscreen Button:** Instant 1-click fullscreen scaling to fill auditorium and classroom projectors.
+### Mobile Devices
+* **Virtual Touch Joystick:** Drag the on-screen joystick knob to move in any direction with analog feel.
+* **On-Screen D-Pad:** Tap arrow buttons for precise grid stepping.
 
 ---
 
@@ -62,14 +77,16 @@ You fell asleep in the campus library and woke up trapped inside at midnight! To
 
 ```text
 escape-the-college/
-├── index.html          # HTML structure, UI screens, HUD, and Canvas
-├── style.css           # Collegiate cyber-dark styling, animations & responsive media queries
-├── README.md           # Documentation & project information
+├── index.html          # Structure, UI screens, HUD, canvas, modals & PWA links
+├── style.css           # Collegiate neon retro pixel styling & responsive queries
+├── README.md           # Game guide, story & GitHub Pages deployment instructions
+├── manifest.json       # PWA web app manifest with inline SVG icon
+├── sw.js               # Service worker for 100% offline cache
 └── js/
-    ├── audio.js        # Procedural spooky BGM & Web Audio synthesizer
-    ├── entities.js     # Player, Enemies, Keys, Shields, and Proxies
-    ├── map.js          # Procedural campus tile-map generator & dynamic lighting
-    └── game.js         # Core game loop, 3-level progression & input manager
+    ├── audio.js        # Procedural spooky BGM, footsteps, heartbeat & boss theme
+    ├── entities.js     # Player, Skins, 4 Enemy types, Boss Dean, Answer Keys, & Power-ups
+    ├── map.js          # Procedural campus tile-map generator & dynamic flashlight
+    └── game.js         # Core loop, Boss fight, Daily Challenge, Achievements & Joystick
 ```
 
 ---
@@ -79,7 +96,7 @@ escape-the-college/
 ```bash
 git clone https://github.com/Praveen-kumar-cg/escape-the-college.git
 cd escape-the-college
-# Double click index.html or open with a local web server:
+# Double click index.html or open with any local server:
 npx serve .
 ```
 

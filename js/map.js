@@ -610,6 +610,12 @@ class CollegeMap {
       outerDarkness = 0.94;
     }
 
+    // Power Cut Random Event: Total Blackout except tight flashlight!
+    if (window.escapeGame && window.escapeGame.activeEvent && window.escapeGame.activeEvent.type === 'power_cut') {
+      radius = 115 + flicker;
+      outerDarkness = 0.99;
+    }
+
     ctx.save();
     const grad = ctx.createRadialGradient(px, py, radius * 0.25, px, py, radius);
     grad.addColorStop(0, 'rgba(0, 0, 0, 0)');

@@ -13,6 +13,21 @@ class SoundManager {
     this.droneOsc1 = null;
     this.droneOsc2 = null;
     this.bgmInterval = null;
+    this.bossThemePlaying = false;
+    this.bossInterval = null;
+    this.lastFootstepTime = 0;
+    this.lastHeartbeatTime = 0;
+    this.masterVolume = 1.0;
+
+    // Load persisted audio settings (etc_ prefix)
+    try {
+      const savedMute = localStorage.getItem('etc_muted');
+      if (savedMute !== null) this.muted = (savedMute === 'true');
+      const savedVol = localStorage.getItem('etc_volume');
+      if (savedVol !== null) this.masterVolume = parseFloat(savedVol) || 1.0;
+    } catch (e) {
+      // RAM fallback
+    }
   }
 
   // Ensure AudioContext is created/resumed upon user interaction
@@ -29,6 +44,9 @@ class SoundManager {
 
   toggleMute() {
     this.muted = !this.muted;
+    try {
+      localStorage.setItem('etc_muted', this.muted.toString());
+    } catch (e) {}
     if (this.bgmGain && this.ctx) {
       const targetGain = this.muted ? 0.0001 : 0.06;
       this.bgmGain.gain.setValueAtTime(this.bgmGain.gain.value, this.ctx.currentTime);
@@ -474,6 +492,123 @@ class SoundManager {
   }
 
   // Click UI pop
+
+  setMasterVolume(val) {
+    this.masterVolume = Math.max(0, Math.min(1, val));
+    try {
+      localStorage.setItem('etc_volume', this.masterVolume.toString());
+    } catch (e) {}
+    if (this.bgmGain && this.ctx && !this.muted) {
+      this.bgmGain.gain.setValueAtTime(0.06 * this.masterVolume, this.ctx.currentTime);
+    }
+  }
+
+  // Soft collegiate hallway footstep sound
+  playFootstep() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    if (now - this.lastFootstepTime < 0.22) return;
+    this.lastFootstepTime = now;
+
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(85 + Math.random() * 30, now);
+      osc.frequency.exponentialRampToValueAtTime(30, now + 0.05);
+
+      gain.gain.setValueAtTime(0.035 * this.masterVolume, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } catch (e) {}
+  }
+
+  // Suspenseful heartbeat pulsing sound (accelerates under pressure)
+  playHeartbeat(rate = 1.0) {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const interval = Math.max(0.35, 0.85 / rate);
+    if (now - this.lastHeartbeatTime < interval) return;
+    this.lastHeartbeatTime = now;
+
+    try {
+      // First thump
+      const osc1 = this.ctx.createOscillator();
+      const gain1 = this.ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(70, now);
+      osc1.frequency.exponentialRampToValueAtTime(35, now + 0.1);
+      gain1.gain.setValueAtTime(0.18 * this.masterVolume, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc1.connect(gain1);
+      gain1.connect(this.ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.1);
+
+      // Second thump (lub-dub)
+      const osc2 = this.ctx.createOscillator();
+      const gain2 = this.ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(80, now + 0.12);
+      osc2.frequency.exponentialRampToValueAtTime(38, now + 0.22);
+      gain2.gain.setValueAtTime(0.14 * this.masterVolume, now + 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      osc2.connect(gain2);
+      gain2.connect(this.ctx.destination);
+      osc2.start(now + 0.12);
+      osc2.stop(now + 0.22);
+    } catch (e) {}
+  }
+
+  // Boss Fight Synth Arpeggio Theme
+  startBossTheme() {
+    if (this.bossThemePlaying) return;
+    this.init();
+    if (!this.ctx) return;
+
+    this.bossThemePlaying = true;
+    const bossNotes = [110, 130.81, 146.83, 155.56, 174.61, 196, 220, 261.63];
+    let noteIdx = 0;
+
+    this.bossInterval = setInterval(() => {
+      if (!this.bossThemePlaying || !this.ctx || this.muted) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const t = this.ctx.currentTime;
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(bossNotes[noteIdx % bossNotes.length], t);
+        noteIdx++;
+
+        gain.gain.setValueAtTime(0.06 * this.masterVolume, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.14);
+      } catch (e) {}
+    }, 150);
+  }
+
+  stopBossTheme() {
+    this.bossThemePlaying = false;
+    if (this.bossInterval) {
+      clearInterval(this.bossInterval);
+      this.bossInterval = null;
+    }
+  }
+
   playClick() {
     if (this.muted) return;
     this.init();

@@ -84,6 +84,7 @@ class Player {
     this.height = 22;
     this.speed = 150; // pixels per second
     this.direction = 'down'; // 'up', 'down', 'left', 'right'
+    this.skin = 'hoodie'; // 'hoodie', 'topper', 'ninja'
     this.isMoving = false;
     this.walkCycle = 0;
 
@@ -93,8 +94,11 @@ class Player {
     this.floatingTexts = []; // floating score/damage notifications
 
     // Power-ups
-    this.hasShield = false; // Attendance Shield: absorbs 1 hit
-    this.proxyTimer = 0;    // Proxy Attendance: invisibility duration in seconds
+    this.hasShield = false;   // Attendance Shield: absorbs 1 hit
+    this.proxyTimer = 0;      // Proxy Attendance: invisibility duration in seconds (5s)
+    this.speedBoostTimer = 0; // Energy Drink: speed boost (6s)
+    this.notesTimer = 0;      // Notes: reveals all keys on map (5s)
+    this.freezeTimer = 0;     // Bunk Pass: freezes all enemies (3s)
 
     // Visual Dash Trail
     this.trail = [];
@@ -122,8 +126,13 @@ class Player {
     if (this.isMoving) {
       this.walkCycle += dt * 10;
 
-      const moveX = dx * this.speed * dt;
-      const moveY = dy * this.speed * dt;
+      let currentSpeed = this.speed;
+      if (this.speedBoostTimer > 0) {
+        currentSpeed *= 1.6; // Speed boost from Energy Drink
+      }
+
+      const moveX = dx * currentSpeed * dt;
+      const moveY = dy * currentSpeed * dt;
 
       // Move X first and check collision (allows sliding along walls)
       this.x += moveX;
@@ -167,7 +176,7 @@ class Player {
       if (this.invulnTimer < 0) this.invulnTimer = 0;
     }
 
-    // Tick Proxy Attendance Invisibility
+    // Tick Proxy Attendance Invisibility (5s)
     if (this.proxyTimer > 0) {
       const prevTimer = this.proxyTimer;
       this.proxyTimer -= dt;
@@ -177,6 +186,24 @@ class Player {
           window.soundManager.playProxyEnd();
         }
       }
+    }
+
+    // Tick Speed Boost (6s)
+    if (this.speedBoostTimer > 0) {
+      this.speedBoostTimer -= dt;
+      if (this.speedBoostTimer < 0) this.speedBoostTimer = 0;
+    }
+
+    // Tick Notes Key Reveal (5s)
+    if (this.notesTimer > 0) {
+      this.notesTimer -= dt;
+      if (this.notesTimer < 0) this.notesTimer = 0;
+    }
+
+    // Tick Bunk Pass Enemy Freeze (3s)
+    if (this.freezeTimer > 0) {
+      this.freezeTimer -= dt;
+      if (this.freezeTimer < 0) this.freezeTimer = 0;
     }
 
     // Update floating texts
@@ -234,11 +261,32 @@ class Player {
     if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#38bdf8', 14);
   }
 
-  activateProxy(duration = 3.0) {
+  activateProxy(duration = 5.0) {
     this.proxyTimer = duration;
-    this.addFloatingText('+PROXY: INVISIBLE 3s! 👻', '#c084fc');
+    this.addFloatingText('+PROXY: INVISIBLE 5s! 👻', '#c084fc');
     if (window.soundManager) window.soundManager.playProxy();
     if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#c084fc', 14);
+  }
+
+  activateEnergyDrink(duration = 6.0) {
+    this.speedBoostTimer = duration;
+    this.addFloatingText('+ENERGY DRINK! (SPEED x1.6) ⚡', '#f59e0b');
+    if (window.soundManager) window.soundManager.playCoffee();
+    if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#f59e0b', 16);
+  }
+
+  activateNotes(duration = 5.0) {
+    this.notesTimer = duration;
+    this.addFloatingText('+CHEAT NOTES! (KEYS REVEALED) 📝', '#10b981');
+    if (window.soundManager) window.soundManager.playKey();
+    if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#10b981', 16);
+  }
+
+  activateBunkPass(duration = 3.0) {
+    this.freezeTimer = duration;
+    this.addFloatingText('+BUNK PASS! (ENEMIES FROZEN) ❄️', '#38bdf8');
+    if (window.soundManager) window.soundManager.playShield();
+    if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#38bdf8', 18);
   }
 
   addFloatingText(text, color) {
@@ -289,35 +337,103 @@ class Player {
     ctx.ellipse(px + this.width / 2, py + this.height + 1, 9, 4, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Backpack (shows behind student if moving down/left/right)
-    if (this.direction !== 'up') {
-      ctx.fillStyle = '#b45309';
-      ctx.fillRect(px + 4, py + 7, 12, 10);
+    // Render by Student Skin
+    if (this.skin === 'topper') {
+      // Golden scholar robe
       ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(px + 6, py + 9, 8, 4);
-    }
+      ctx.fillRect(px + 3, py + 8, 14, 10);
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(px + 8, py + 8, 4, 10);
 
-    // Body (Cyan/Teal student hoodie)
-    ctx.fillStyle = '#06b6d4';
-    ctx.fillRect(px + 3, py + 8, 14, 10);
+      // Head
+      ctx.fillStyle = '#fcd34d';
+      ctx.fillRect(px + 5, py + 2, 10, 7);
 
-    // Head
-    ctx.fillStyle = '#fcd34d';
-    ctx.fillRect(px + 5, py + 1, 10, 8);
+      // Mortarboard Hat (Diamond cap + tassel)
+      ctx.fillStyle = '#1e1b4b';
+      ctx.beginPath();
+      ctx.moveTo(px + 10, py - 4);
+      ctx.lineTo(px + 18, py);
+      ctx.lineTo(px + 10, py + 4);
+      ctx.lineTo(px + 2, py);
+      ctx.closePath();
+      ctx.fill();
 
-    // Hair / Cap
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(px + 4, py - 1, 12, 4);
+      // Gold Tassel
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(px + 10, py);
+      ctx.lineTo(px + 3, py + 6);
+      ctx.stroke();
 
-    // Eyes depending on direction
-    ctx.fillStyle = '#0f172a';
-    if (this.direction === 'down') {
-      ctx.fillRect(px + 7, py + 4, 2, 2);
-      ctx.fillRect(px + 11, py + 4, 2, 2);
-    } else if (this.direction === 'left') {
-      ctx.fillRect(px + 5, py + 4, 2, 2);
-    } else if (this.direction === 'right') {
-      ctx.fillRect(px + 13, py + 4, 2, 2);
+      // Glasses
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(px + 6, py + 4, 3, 2);
+      ctx.strokeRect(px + 11, py + 4, 3, 2);
+    } else if (this.skin === 'ninja') {
+      // Midnight ninja suit
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(px + 3, py + 8, 14, 10);
+
+      // Red trailing scarf
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(px + 2, py + 8, 16, 2);
+      if (this.isMoving) {
+        const scarfWave = Math.sin(time * 0.02) * 3;
+        ctx.fillRect(px - 3, py + 8 + scarfWave, 5, 2);
+      }
+
+      // Head & Mask
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(px + 5, py + 1, 10, 8);
+
+      // White glowing ninja slit eyes
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 4;
+      if (this.direction === 'left') {
+        ctx.fillRect(px + 5, py + 4, 3, 1.5);
+      } else if (this.direction === 'right') {
+        ctx.fillRect(px + 12, py + 4, 3, 1.5);
+      } else {
+        ctx.fillRect(px + 6, py + 4, 2.5, 1.5);
+        ctx.fillRect(px + 11, py + 4, 2.5, 1.5);
+      }
+      ctx.shadowBlur = 0;
+    } else {
+      // Classic Hoodie
+      // Backpack (shows behind student if moving down/left/right)
+      if (this.direction !== 'up') {
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(px + 4, py + 7, 12, 10);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(px + 6, py + 9, 8, 4);
+      }
+
+      // Body (Cyan/Teal student hoodie)
+      ctx.fillStyle = '#06b6d4';
+      ctx.fillRect(px + 3, py + 8, 14, 10);
+
+      // Head
+      ctx.fillStyle = '#fcd34d';
+      ctx.fillRect(px + 5, py + 1, 10, 8);
+
+      // Hair / Cap
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(px + 4, py - 1, 12, 4);
+
+      // Eyes depending on direction
+      ctx.fillStyle = '#0f172a';
+      if (this.direction === 'down') {
+        ctx.fillRect(px + 7, py + 4, 2, 2);
+        ctx.fillRect(px + 11, py + 4, 2, 2);
+      } else if (this.direction === 'left') {
+        ctx.fillRect(px + 5, py + 4, 2, 2);
+      } else if (this.direction === 'right') {
+        ctx.fillRect(px + 13, py + 4, 2, 2);
+      }
     }
 
     // Legs with walk animation
@@ -524,6 +640,144 @@ class ProxyAttendanceItem {
   }
 }
 
+class EnergyDrinkItem {
+  constructor(tileCol, tileRow) {
+    this.col = tileCol;
+    this.row = tileRow;
+    this.x = tileCol * TILE_SIZE + 6;
+    this.y = tileRow * TILE_SIZE + 6;
+    this.width = 20;
+    this.height = 20;
+    this.collected = false;
+  }
+
+  reset() {
+    this.collected = false;
+  }
+
+  draw(ctx, time) {
+    if (this.collected) return;
+
+    const bob = Math.sin(time * 0.007 + this.col) * 3;
+    const ex = this.x;
+    const ey = this.y + bob;
+
+    ctx.save();
+    // Pulsing Amber Energy Aura
+    const pulseGlow = 12 + Math.sin(time * 0.008) * 5;
+    ctx.shadowColor = '#f59e0b';
+    ctx.shadowBlur = pulseGlow;
+
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
+    ctx.beginPath();
+    ctx.arc(ex + 10, ey + 10, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Energy bolt emoji / can
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚡', ex + 10, ey + 15);
+
+    ctx.restore();
+  }
+}
+
+class NotesItem {
+  constructor(tileCol, tileRow) {
+    this.col = tileCol;
+    this.row = tileRow;
+    this.x = tileCol * TILE_SIZE + 6;
+    this.y = tileRow * TILE_SIZE + 6;
+    this.width = 20;
+    this.height = 20;
+    this.collected = false;
+  }
+
+  reset() {
+    this.collected = false;
+  }
+
+  draw(ctx, time) {
+    if (this.collected) return;
+
+    const bob = Math.sin(time * 0.006 + this.row) * 3;
+    const nx = this.x;
+    const ny = this.y + bob;
+
+    ctx.save();
+    // Pulsing Emerald Notes Aura
+    const pulseGlow = 12 + Math.sin(time * 0.008) * 5;
+    ctx.shadowColor = '#10b981';
+    ctx.shadowBlur = pulseGlow;
+
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.25)';
+    ctx.beginPath();
+    ctx.arc(nx + 10, ny + 10, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Notes scroll emoji
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('📝', nx + 10, ny + 15);
+
+    ctx.restore();
+  }
+}
+
+class BunkPassItem {
+  constructor(tileCol, tileRow) {
+    this.col = tileCol;
+    this.row = tileRow;
+    this.x = tileCol * TILE_SIZE + 6;
+    this.y = tileRow * TILE_SIZE + 6;
+    this.width = 20;
+    this.height = 20;
+    this.collected = false;
+  }
+
+  reset() {
+    this.collected = false;
+  }
+
+  draw(ctx, time) {
+    if (this.collected) return;
+
+    const bob = Math.sin(time * 0.008 + this.col) * 3;
+    const bx = this.x;
+    const by = this.y + bob;
+
+    ctx.save();
+    // Pulsing Ice-Blue Freeze Aura
+    const pulseGlow = 12 + Math.sin(time * 0.009) * 5;
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = pulseGlow;
+
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+    ctx.beginPath();
+    ctx.arc(bx + 10, by + 10, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Snowflake emoji
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('❄️', bx + 10, by + 15);
+
+    ctx.restore();
+  }
+}
+
 // ============================================================================
 // 5. COFFEE PICKUP CLASS (With Warm Steam & Pulsing Glow)
 // ============================================================================
@@ -577,15 +831,24 @@ class CoffeeItem {
 }
 
 // ============================================================================
-// 6. ENEMY CLASSES (Professors & Flying Assignments)
+// 6. ENEMY VARIETY & PERSONALITY
+// Types: Professor (vision cone), Warden (lantern radius chaser),
+// Ghost Senior (phases walls & flickers), Assignment Drone (explodes & respawns)
 // ============================================================================
 class Enemy {
   constructor(type, x, y, options = {}) {
-    this.type = type; // 'professor' or 'assignment'
+    this.type = type; // 'professor', 'warden', 'ghost_senior', 'drone', 'assignment'
     this.startX = x;
     this.startY = y;
     this.x = x;
     this.y = y;
+    this.options = options;
+
+    this.speechBubble = null;
+    this.speechCooldown = Math.random() * 2;
+    this.respawnTimer = 0;
+    this.sweepTime = Math.random() * 10;
+    this.visionAngle = 0;
 
     if (type === 'professor') {
       this.width = 24;
@@ -598,7 +861,59 @@ class Enemy {
       this.dir = 1;
       this.name = options.name || "Professor";
       this.isDean = !!options.isDean;
+      this.speechList = [
+        "Attendance 74%!",
+        "Where's your ID?",
+        "Beta, assignment kahan hai?",
+        "Detained!",
+        "Surprise viva today!",
+        "Backlog guaranteed!"
+      ];
+    } else if (type === 'warden') {
+      this.width = 24;
+      this.height = 26;
+      this.speed = options.speed || 130;
+      this.damage = options.damage || 22;
+      this.name = options.name || "Hostel Warden";
+      this.lightRadius = 75;
+      this.patrolDirX = Math.random() < 0.5 ? 1 : -1;
+      this.patrolDirY = Math.random() < 0.5 ? 1 : -1;
+      this.patrolTimer = 0;
+      this.speechList = [
+        "Hostel curfew 10 PM!",
+        "Lights OUT!",
+        "Where's your hall pass?!",
+        "Caught red-handed!",
+        "Call your parents!"
+      ];
+    } else if (type === 'ghost_senior') {
+      this.width = 22;
+      this.height = 26;
+      this.speed = options.speed || 48;
+      this.damage = options.damage || 16;
+      this.name = options.name || "Ghost Senior";
+      this.flickerAlpha = 0.6;
+      this.speechList = [
+        "Backlog clear hua?",
+        "I've been here 7 years...",
+        "Drop year mat lena...",
+        "Placement season...",
+        "Pass marks kitne the?"
+      ];
+    } else if (type === 'drone') {
+      this.width = 22;
+      this.height = 20;
+      this.speed = options.speed || 85;
+      this.damage = options.damage || 22;
+      this.name = options.name || "Assignment Drone";
+      this.speechList = [
+        "SUBMIT BY TONIGHT!",
+        "DEADLINE 11:59 PM!",
+        "0 MARKS FOR LATE!",
+        "PLAGIARISM DETECTED!"
+      ];
     } else {
+      // Classic flying assignment
       this.width = 18;
       this.height = 20;
       this.speed = options.speed || 95;
@@ -609,17 +924,81 @@ class Enemy {
       this.maxX = options.maxX || 768;
       this.minY = options.minY || 32;
       this.maxY = options.maxY || 544;
+      this.name = "Assignment";
+      this.speechList = ["Grade: F!", "Pending Review!"];
     }
+    this.baseSpeed = this.speed;
   }
 
   reset() {
     this.x = this.startX;
     this.y = this.startY;
     this.dir = 1;
+    this.respawnTimer = 0;
+    this.speechBubble = null;
+    this.speechCooldown = 2;
   }
 
-  update(dt, map) {
+  triggerSpeech(text) {
+    if (this.speechCooldown > 0) return;
+    const phrase = text || this.speechList[Math.floor(Math.random() * this.speechList.length)];
+    this.speechBubble = { text: phrase, timer: 2.2 };
+    this.speechCooldown = 5.0;
+  }
+
+  explode() {
+    this.respawnTimer = 10.0;
+    if (window.particleSystem) {
+      window.particleSystem.addBurst(this.x + 10, this.y + 10, '#ef4444', 20, 90);
+      window.particleSystem.addBurst(this.x + 10, this.y + 10, '#f97316', 15, 75);
+    }
+    if (window.soundManager) {
+      window.soundManager.playHit();
+    }
+  }
+
+  update(dt, map, player) {
+    // Tick Speech Bubble & Cooldowns
+    if (this.speechBubble) {
+      this.speechBubble.timer -= dt;
+      if (this.speechBubble.timer <= 0) {
+        this.speechBubble = null;
+      }
+    }
+    if (this.speechCooldown > 0) {
+      this.speechCooldown -= dt;
+    }
+
+    // Drone respawn timer
+    if (this.type === 'drone' && this.respawnTimer > 0) {
+      this.respawnTimer -= dt;
+      if (this.respawnTimer <= 0) {
+        this.respawnTimer = 0;
+        this.x = this.startX;
+        this.y = this.startY;
+        if (window.particleSystem) {
+          window.particleSystem.addBurst(this.x + 10, this.y + 10, '#06b6d4', 14, 60);
+        }
+      }
+      return; // Inactive while recharging
+    }
+
+    // If player has Bunk Pass active, all enemies are frozen!
+    if (player && player.freezeTimer > 0) {
+      return;
+    }
+
+    // Surprise Test Random Event: Speed up by 40% for 10s
+    let spd = this.baseSpeed;
+    if (window.escapeGame && window.escapeGame.activeEvent && window.escapeGame.activeEvent.type === 'surprise_test') {
+      spd *= 1.4;
+    }
+    this.speed = spd;
+
+    // 1. PROFESSOR PATROL & SWEEPING VISION CONE
     if (this.type === 'professor') {
+      this.sweepTime += dt;
+      let baseAngle = 0;
       if (this.axis === 'x') {
         this.x += this.dir * this.speed * dt;
         if (this.x >= this.maxPos) {
@@ -629,6 +1008,7 @@ class Enemy {
           this.x = this.minPos;
           this.dir = 1;
         }
+        baseAngle = this.dir > 0 ? 0 : Math.PI;
       } else {
         this.y += this.dir * this.speed * dt;
         if (this.y >= this.maxPos) {
@@ -638,7 +1018,135 @@ class Enemy {
           this.y = this.minPos;
           this.dir = 1;
         }
+        baseAngle = this.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
       }
+
+      // Sweeping vision cone angle (oscillates ±30 degrees)
+      const sweepOffset = Math.sin(this.sweepTime * 2.8) * 0.52;
+      this.visionAngle = baseAngle + sweepOffset;
+
+      // Vision cone player detection
+      if (player && player.proxyTimer <= 0) {
+        const px = player.x + player.width / 2;
+        const py = player.y + player.height / 2;
+        const ex = this.x + this.width / 2;
+        const ey = this.y + this.height / 2;
+        const dist = Math.hypot(px - ex, py - ey);
+
+        if (dist < 95) {
+          const angleToPlayer = Math.atan2(py - ey, px - ex);
+          let angleDiff = Math.abs(angleToPlayer - this.visionAngle);
+          while (angleDiff > Math.PI) angleDiff = Math.abs(angleDiff - Math.PI * 2);
+
+          if (angleDiff < 0.48) {
+            this.triggerSpeech();
+          }
+        }
+      }
+
+    // 2. WARDEN: FAST CHASER INSIDE LANTERN LIGHT RADIUS
+    } else if (this.type === 'warden') {
+      let isChasingPlayer = false;
+      if (player && player.proxyTimer <= 0) {
+        const px = player.x + player.width / 2;
+        const py = player.y + player.height / 2;
+        const ex = this.x + this.width / 2;
+        const ey = this.y + this.height / 2;
+        const dist = Math.hypot(px - ex, py - ey);
+
+        if (dist <= this.lightRadius) {
+          isChasingPlayer = true;
+          this.triggerSpeech();
+
+          // Charge towards player
+          const angle = Math.atan2(py - ey, px - ex);
+          const moveX = Math.cos(angle) * this.speed * dt;
+          const moveY = Math.sin(angle) * this.speed * dt;
+
+          this.x += moveX;
+          if (map.checkCollision(this.x, this.y, this.width, this.height)) {
+            this.x -= moveX;
+          }
+          this.y += moveY;
+          if (map.checkCollision(this.x, this.y, this.width, this.height)) {
+            this.y -= moveY;
+          }
+        }
+      }
+
+      if (!isChasingPlayer) {
+        // Patrol wander
+        this.patrolTimer += dt;
+        if (this.patrolTimer > 1.8) {
+          this.patrolTimer = 0;
+          this.patrolDirX = (Math.random() - 0.5) * 2;
+          this.patrolDirY = (Math.random() - 0.5) * 2;
+        }
+        const moveX = this.patrolDirX * (this.speed * 0.5) * dt;
+        const moveY = this.patrolDirY * (this.speed * 0.5) * dt;
+
+        this.x += moveX;
+        if (map.checkCollision(this.x, this.y, this.width, this.height)) {
+          this.x -= moveX;
+          this.patrolDirX = -this.patrolDirX;
+        }
+        this.y += moveY;
+        if (map.checkCollision(this.x, this.y, this.width, this.height)) {
+          this.y -= moveY;
+          this.patrolDirY = -this.patrolDirY;
+        }
+      }
+
+    // 3. GHOST SENIOR: SLOW, PHASES THROUGH WALLS, FLICKERS
+    } else if (this.type === 'ghost_senior') {
+      this.sweepTime += dt;
+      this.flickerAlpha = 0.2 + 0.65 * ((Math.sin(this.sweepTime * 3) + 1) / 2);
+
+      if (player) {
+        const px = player.x + player.width / 2;
+        const py = player.y + player.height / 2;
+        const ex = this.x + this.width / 2;
+        const ey = this.y + this.height / 2;
+        const dist = Math.hypot(px - ex, py - ey);
+
+        if (dist < 110 && player.proxyTimer <= 0) {
+          this.triggerSpeech();
+        }
+
+        // Float steadily towards player — BYPASSES WALL COLLISION!
+        const angle = Math.atan2(py - ey, px - ex);
+        this.x += Math.cos(angle) * this.speed * dt;
+        this.y += Math.sin(angle) * this.speed * dt;
+      }
+
+    // 4. ASSIGNMENT DRONE: HOMES IN ON PLAYER, RECHARGES AFTER HIT
+    } else if (this.type === 'drone') {
+      if (player) {
+        const px = player.x + player.width / 2;
+        const py = player.y + player.height / 2;
+        const ex = this.x + this.width / 2;
+        const ey = this.y + this.height / 2;
+        const dist = Math.hypot(px - ex, py - ey);
+
+        if (dist < 120 && player.proxyTimer <= 0) {
+          this.triggerSpeech();
+        }
+
+        const angle = Math.atan2(py - ey, px - ex);
+        const moveX = Math.cos(angle) * this.speed * dt;
+        const moveY = Math.sin(angle) * this.speed * dt;
+
+        this.x += moveX;
+        if (map.checkCollision(this.x, this.y, this.width, this.height)) {
+          this.x -= moveX;
+        }
+        this.y += moveY;
+        if (map.checkCollision(this.x, this.y, this.width, this.height)) {
+          this.y -= moveY;
+        }
+      }
+
+    // 5. CLASSIC FLYING ASSIGNMENT
     } else {
       this.x += this.vx * this.speed * dt;
       this.y += this.vy * this.speed * dt;
@@ -655,26 +1163,27 @@ class Enemy {
   }
 
   draw(ctx, time) {
+    // If drone is recharging/inactive, do not draw
+    if (this.type === 'drone' && this.respawnTimer > 0) return;
+
     const ex = Math.round(this.x);
     const ey = Math.round(this.y);
 
+    // 1. PROFESSOR
     if (this.type === 'professor') {
       ctx.save();
-      // Flashlight / Detection beam
-      ctx.fillStyle = this.isDean ? 'rgba(220, 38, 38, 0.22)' : 'rgba(239, 68, 68, 0.14)';
+      // Sweeping Flashlight / Vision cone
+      const coneRadius = 90;
+      const coneAngle = 0.45;
       ctx.beginPath();
-      if (this.axis === 'x') {
-        const beamDir = this.dir;
-        ctx.moveTo(ex + (beamDir > 0 ? this.width : 0), ey + 10);
-        ctx.lineTo(ex + beamDir * 55, ey - 10);
-        ctx.lineTo(ex + beamDir * 55, ey + 30);
-      } else {
-        const beamDir = this.dir;
-        ctx.moveTo(ex + 12, ey + (beamDir > 0 ? this.height : 0));
-        ctx.lineTo(ex - 12, ey + beamDir * 55);
-        ctx.lineTo(ex + 36, ey + beamDir * 55);
-      }
+      ctx.moveTo(ex + 12, ey + 13);
+      ctx.arc(ex + 12, ey + 13, coneRadius, this.visionAngle - coneAngle, this.visionAngle + coneAngle);
       ctx.closePath();
+
+      const coneGrad = ctx.createRadialGradient(ex + 12, ey + 13, 10, ex + 12, ey + 13, coneRadius);
+      coneGrad.addColorStop(0, this.isDean ? 'rgba(239, 68, 68, 0.4)' : 'rgba(239, 68, 68, 0.25)');
+      coneGrad.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+      ctx.fillStyle = coneGrad;
       ctx.fill();
 
       // Professor Shadow
@@ -712,8 +1221,152 @@ class Enemy {
 
       ctx.restore();
 
+    // 2. WARDEN
+    } else if (this.type === 'warden') {
+      ctx.save();
+      // Lantern Light Radius
+      const rad = this.lightRadius;
+      const grad = ctx.createRadialGradient(ex + 12, ey + 13, 10, ex + 12, ey + 13, rad);
+      grad.addColorStop(0, 'rgba(251, 191, 36, 0.28)');
+      grad.addColorStop(0.7, 'rgba(251, 191, 36, 0.12)');
+      grad.addColorStop(1, 'rgba(251, 191, 36, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(ex + 12, ey + 13, rad, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.beginPath();
+      ctx.ellipse(ex + 12, ey + 26, 10, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Khaki uniform
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(ex + 4, ey + 8, 16, 14);
+
+      // Brass security badge
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(ex + 6, ey + 10, 3, 4);
+
+      // Peaked Cap
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(ex + 5, ey - 2, 14, 5);
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(ex + 5, ey + 2, 14, 1.5);
+
+      // Head & Mustache
+      ctx.fillStyle = '#fcd34d';
+      ctx.fillRect(ex + 7, ey + 3, 10, 6);
+      ctx.fillStyle = '#1c1917';
+      ctx.fillRect(ex + 8, ey + 7, 8, 2); // Stern mustache
+
+      // Glowing Lantern
+      ctx.fillStyle = '#f59e0b';
+      ctx.shadowColor = '#facc15';
+      ctx.shadowBlur = 8;
+      ctx.fillRect(ex + 18, ey + 12, 5, 8);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(ex + 19, ey + 14, 3, 4);
+      ctx.shadowBlur = 0;
+
+      ctx.restore();
+
+    // 3. GHOST SENIOR
+    } else if (this.type === 'ghost_senior') {
+      ctx.save();
+      ctx.globalAlpha = this.flickerAlpha;
+
+      // Ethereal Blue Glow
+      ctx.shadowColor = '#60a5fa';
+      ctx.shadowBlur = 12;
+
+      // Spectral Convocation Gown Body
+      const wisp = Math.sin(time * 0.008) * 3;
+      ctx.fillStyle = '#312e81';
+      ctx.beginPath();
+      ctx.moveTo(ex + 4, ey + 8);
+      ctx.lineTo(ex + 18, ey + 8);
+      ctx.lineTo(ex + 20 + wisp, ey + 24);
+      ctx.lineTo(ex + 12, ey + 20);
+      ctx.lineTo(ex + 2 - wisp, ey + 24);
+      ctx.closePath();
+      ctx.fill();
+
+      // Ghost Head
+      ctx.fillStyle = '#93c5fd';
+      ctx.beginPath();
+      ctx.arc(ex + 11, ey + 5, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Graduation Mortarboard Cap
+      ctx.fillStyle = '#1e1b4b';
+      ctx.beginPath();
+      ctx.moveTo(ex + 11, ey - 3);
+      ctx.lineTo(ex + 19, ey);
+      ctx.lineTo(ex + 11, ey + 3);
+      ctx.lineTo(ex + 3, ey);
+      ctx.closePath();
+      ctx.fill();
+
+      // Golden Tassel
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ex + 11, ey);
+      ctx.lineTo(ex + 5, ey + 4);
+      ctx.stroke();
+
+      // Glowing spectral eyes
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(ex + 9, ey + 4, 1.5, 2);
+      ctx.fillRect(ex + 13, ey + 4, 1.5, 2);
+
+      ctx.restore();
+
+    // 4. ASSIGNMENT DRONE
+    } else if (this.type === 'drone') {
+      ctx.save();
+      const hover = Math.sin(time * 0.012) * 2;
+
+      // Rotor blades blur
+      ctx.fillStyle = 'rgba(203, 213, 225, 0.4)';
+      ctx.beginPath();
+      ctx.ellipse(ex + 2, ey + hover, 6, 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(ex + 20, ey + hover, 6, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Drone Chassis
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(ex + 5, ey + 3 + hover, 12, 7);
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ex + 2, ey + hover); ctx.lineTo(ex + 6, ey + 4 + hover);
+      ctx.moveTo(ex + 20, ey + hover); ctx.lineTo(ex + 16, ey + 4 + hover);
+      ctx.stroke();
+
+      // Blinking red beacon LED
+      const blink = Math.sin(time * 0.02) > 0;
+      ctx.fillStyle = blink ? '#ef4444' : '#7f1d1d';
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = blink ? 8 : 0;
+      ctx.beginPath();
+      ctx.arc(ex + 11, ey + 6 + hover, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hanging Exam Sheets with red "F"
+      ctx.fillStyle = '#f8fafc';
+      ctx.shadowBlur = 0;
+      ctx.fillRect(ex + 6, ey + 10 + hover, 10, 11);
+      ctx.fillStyle = '#ef4444';
+      ctx.font = 'bold 8px monospace';
+      ctx.fillText('F', ex + 8.5, ey + 18 + hover);
+
+      ctx.restore();
+
+    // 5. CLASSIC FLYING ASSIGNMENT
     } else {
-      // Flying Assignment
       ctx.save();
       const flap = Math.sin(time * 0.015) * 3;
 
@@ -743,5 +1396,319 @@ class Enemy {
 
       ctx.restore();
     }
+
+    // Frozen in ice overlay if player has Bunk Pass active
+    if (window.escapeGame && window.escapeGame.player && window.escapeGame.player.freezeTimer > 0) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.fillRect(ex - 3, ey - 3, this.width + 6, this.height + 6);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(ex - 3, ey - 3, this.width + 6, this.height + 6);
+      ctx.font = '11px sans-serif';
+      ctx.fillText('❄️', ex + this.width / 2 - 5, ey - 5);
+      ctx.restore();
+    }
+
+    // SPEECH BUBBLE RENDERING
+    if (this.speechBubble && this.speechBubble.timer > 0) {
+      const alpha = Math.min(1, this.speechBubble.timer / 0.35);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.font = "bold 7px 'Press Start 2P', monospace";
+      const text = this.speechBubble.text;
+      const textWidth = ctx.measureText(text).width;
+      const bw = textWidth + 12;
+      const bh = 17;
+      const bx = ex + this.width / 2 - bw / 2;
+      const by = ey - bh - 9;
+
+      // Dark background
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.rect(bx, by, bw, bh);
+      ctx.fill();
+      ctx.stroke();
+
+      // Pointer tail
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.moveTo(ex + this.width / 2 - 3, by + bh);
+      ctx.lineTo(ex + this.width / 2, by + bh + 4);
+      ctx.lineTo(ex + this.width / 2 + 3, by + bh);
+      ctx.fill();
+
+      // Text
+      ctx.fillStyle = '#fef08a';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, bx + bw / 2, by + bh / 2 + 1);
+
+      ctx.restore();
+    }
+  }
+}
+
+// ============================================================================
+// 7. BOSS ENEMY: "THE FINAL EXAM" & ANSWER KEY WEAPON
+// ============================================================================
+class BossEnemy {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.width = 46;
+    this.height = 52;
+    this.maxHealth = 3;
+    this.health = 3;
+    this.damage = 25;
+    this.speed = 70;
+    this.state = 'idle'; // 'idle', 'charge_prep', 'charging'
+    this.stateTimer = 2.0;
+    this.attackCycle = 0;
+    this.chargeVx = 0;
+    this.chargeVy = 0;
+    this.flashTimer = 0;
+    this.defeated = false;
+    this.speechBubble = { text: "PREPARE FOR THE FINAL EXAM!", timer: 3.0 };
+  }
+
+  takeHit() {
+    this.health -= 1;
+    this.flashTimer = 0.4;
+    this.speechBubble = {
+      text: this.health === 2 ? "PAPER LEAK DETECTED?!" : this.health === 1 ? "MY CURVE IS RUINED!" : "I AM DEFEATED!",
+      timer: 2.2
+    };
+    if (this.health <= 0) {
+      this.defeated = true;
+    }
+  }
+
+  update(dt, map, player, projectiles) {
+    if (this.defeated) return;
+
+    if (this.flashTimer > 0) this.flashTimer -= dt;
+    if (this.speechBubble && this.speechBubble.timer > 0) {
+      this.speechBubble.timer -= dt;
+      if (this.speechBubble.timer <= 0) this.speechBubble = null;
+    }
+
+    this.stateTimer -= dt;
+
+    if (this.state === 'idle') {
+      this.y += Math.sin(Date.now() * 0.003) * 16 * dt;
+
+      if (this.stateTimer <= 0) {
+        this.attackCycle = (this.attackCycle + 1) % 3;
+
+        if (this.attackCycle === 0) {
+          // Attack 1: Falling papers in lines
+          this.speechBubble = { text: "SURPRISE EXAM SHEETS!", timer: 2.0 };
+          for (let c = 3; c <= 21; c += 3) {
+            projectiles.push({
+              type: 'paper',
+              x: c * TILE_SIZE,
+              y: 2 * TILE_SIZE,
+              vx: 0,
+              vy: 115,
+              width: 14,
+              height: 16
+            });
+          }
+          this.stateTimer = 2.5;
+        } else if (this.attackCycle === 1) {
+          // Attack 2: Spreading circle of "F" grades
+          this.speechBubble = { text: "F FOR EVERYONE!", timer: 2.0 };
+          const count = 10;
+          for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 * i) / count;
+            projectiles.push({
+              type: 'f_grade',
+              x: this.x + this.width / 2,
+              y: this.y + this.height / 2,
+              vx: Math.cos(angle) * 125,
+              vy: Math.sin(angle) * 125,
+              size: 10
+            });
+          }
+          this.stateTimer = 2.8;
+        } else {
+          // Attack 3: Wind-up charge towards player
+          this.state = 'charge_prep';
+          this.stateTimer = 1.0;
+          this.speechBubble = { text: "DETENTION INCOMING!", timer: 1.5 };
+        }
+      }
+    } else if (this.state === 'charge_prep') {
+      if (this.stateTimer <= 0) {
+        this.state = 'charging';
+        this.stateTimer = 1.2;
+        const angle = Math.atan2(player.y - this.y, player.x - this.x);
+        this.chargeVx = Math.cos(angle) * 220;
+        this.chargeVy = Math.sin(angle) * 220;
+      }
+    } else if (this.state === 'charging') {
+      this.x += this.chargeVx * dt;
+      this.y += this.chargeVy * dt;
+
+      if (this.x < 32 || this.x > MAP_COLS * TILE_SIZE - 64) this.chargeVx *= -1;
+      if (this.y < 32 || this.y > MAP_ROWS * TILE_SIZE - 64) this.chargeVy *= -1;
+
+      if (this.stateTimer <= 0) {
+        this.state = 'idle';
+        this.stateTimer = 2.0;
+      }
+    }
+  }
+
+  draw(ctx, time) {
+    if (this.defeated) return;
+
+    const bx = Math.round(this.x);
+    const by = Math.round(this.y);
+
+    ctx.save();
+
+    if (this.state === 'charge_prep') {
+      const pulse = Math.sin(time * 0.02) * 6;
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(bx - 4 - pulse, by - 4 - pulse, this.width + 8 + pulse * 2, this.height + 8 + pulse * 2);
+    }
+
+    if (this.flashTimer > 0) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(bx, by, this.width, this.height);
+      ctx.restore();
+      return;
+    }
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.beginPath();
+    ctx.ellipse(bx + this.width / 2, by + this.height + 2, 22, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Robe
+    ctx.fillStyle = '#450a0a';
+    ctx.fillRect(bx + 4, by + 14, this.width - 8, this.height - 14);
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(bx + 4, by + 14, this.width - 8, this.height - 14);
+
+    // Collar
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(bx + this.width / 2, by + 22, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head
+    ctx.fillStyle = '#fde68a';
+    ctx.fillRect(bx + 12, by + 4, 22, 12);
+    ctx.fillStyle = '#1c1917';
+    ctx.fillRect(bx + 10, by, 26, 6);
+
+    // Eyes
+    ctx.fillStyle = '#ef4444';
+    ctx.shadowColor = '#ef4444';
+    ctx.shadowBlur = 8;
+    ctx.fillRect(bx + 15, by + 8, 4, 3);
+    ctx.fillRect(bx + 27, by + 8, 4, 3);
+    ctx.shadowBlur = 0;
+
+    // Health Bar
+    const barWidth = 60;
+    const barHeight = 8;
+    const barX = bx + this.width / 2 - barWidth / 2;
+    const barY = by - 16;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4);
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4);
+
+    const hpWidth = (this.health / this.maxHealth) * barWidth;
+    ctx.fillStyle = this.health === 3 ? '#10b981' : this.health === 2 ? '#f59e0b' : '#ef4444';
+    ctx.fillRect(barX, barY, hpWidth, barHeight);
+
+    ctx.font = "bold 6px 'Press Start 2P', monospace";
+    ctx.fillStyle = '#fef08a';
+    ctx.textAlign = 'center';
+    ctx.fillText("FINAL EXAM DEAN", bx + this.width / 2, barY - 5);
+
+    ctx.restore();
+
+    // Speech Bubble
+    if (this.speechBubble && this.speechBubble.timer > 0) {
+      ctx.save();
+      ctx.font = "bold 7px 'Press Start 2P', monospace";
+      const text = this.speechBubble.text;
+      const tw = ctx.measureText(text).width;
+      const bw = tw + 14;
+      const bh = 18;
+      const bxP = bx + this.width / 2 - bw / 2;
+      const byP = barY - 26;
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.96)';
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(bxP, byP, bw, bh);
+      ctx.strokeRect(bxP, byP, bw, bh);
+
+      ctx.fillStyle = '#fef08a';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, bxP + bw / 2, byP + bh / 2 + 1);
+      ctx.restore();
+    }
+  }
+}
+
+class AnswerKeyItem {
+  constructor(tileCol, tileRow, index) {
+    this.col = tileCol;
+    this.row = tileRow;
+    this.x = tileCol * TILE_SIZE + 6;
+    this.y = tileRow * TILE_SIZE + 6;
+    this.width = 20;
+    this.height = 20;
+    this.index = index;
+    this.collected = false;
+  }
+
+  draw(ctx, time) {
+    if (this.collected) return;
+
+    const bob = Math.sin(time * 0.008 + this.index) * 3;
+    const ax = this.x;
+    const ay = this.y + bob;
+
+    ctx.save();
+    const pulse = Math.sin(time * 0.01) * 6;
+    ctx.shadowColor = '#facc15';
+    ctx.shadowBlur = 14 + pulse;
+
+    ctx.fillStyle = 'rgba(250, 204, 21, 0.3)';
+    ctx.beginPath();
+    ctx.arc(ax + 10, ay + 10, 14, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🔑', ax + 10, ay + 15);
+
+    ctx.font = "bold 6px 'Press Start 2P', monospace";
+    ctx.fillStyle = '#fef08a';
+    ctx.textAlign = 'center';
+    ctx.fillText(`KEY #${this.index}`, ax + 10, ay - 6);
+
+    ctx.restore();
   }
 }

@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
   
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -219,19 +220,45 @@
             </p>
           </div>
 
+          <!-- Menu Settings: Difficulty & Student Skin -->
+          <div class="menu-config-panel">
+            <div class="menu-setting-group">
+              <span class="setting-label">DIFFICULTY:</span>
+              <div class="difficulty-picker" id="difficulty-picker">
+                <button class="diff-btn" data-diff="fresher" type="button">Fresher</button>
+                <button class="diff-btn active" data-diff="backbencher" type="button">Backbencher</button>
+                <button class="diff-btn" data-diff="topper" type="button">Topper</button>
+                <button class="diff-btn" data-diff="final_year" type="button">Final Year</button>
+              </div>
+              <label class="one-hit-label" title="One strike from an enemy or projectile ends the run!">
+                <input type="checkbox" id="one-hit-checkbox"> 💀 One-Hit Ends Run
+              </label>
+            </div>
+
+            <div class="menu-setting-group">
+              <span class="setting-label">STUDENT SKIN:</span>
+              <div class="skin-picker" id="skin-picker">
+                <button class="skin-btn active" data-skin="hoodie" type="button" title="Classic Cyan Hoodie">🧥 Hoodie</button>
+                <button class="skin-btn" data-skin="topper" type="button" title="Gold Scholar Robe & Mortarboard">🎓 Topper</button>
+                <button class="skin-btn" data-skin="ninja" type="button" title="Stealth Midnight Shinobi">🥷 Ninja</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Menu Action Buttons -->
           <div class="menu-actions-stack">
             <button id="start-escape-btn" class="primary-btn pulse-glow" type="button">
               <span class="btn-icon">⚡</span> START ESCAPE
             </button>
+            <button id="start-daily-btn" class="primary-btn daily-challenge-btn" type="button">
+              <span class="btn-icon">📅</span> DAILY CHALLENGE
+            </button>
             
             <div class="secondary-actions-row">
-              <button id="btn-how-to-play" class="secondary-btn menu-sec-btn" type="button">
-                📖 How to Play
-              </button>
-              <button id="btn-menu-sound" class="secondary-btn menu-sec-btn" type="button">
-                🔊 Sound: On
-              </button>
+              <button id="btn-how-to-play" class="secondary-btn menu-sec-btn" type="button">📖 How to Play</button>
+              <button id="btn-menu-sound" class="secondary-btn menu-sec-btn" type="button">🔊 Sound: On</button>
+              <button id="btn-menu-stats" class="secondary-btn menu-sec-btn" type="button">🏆 Stats &amp; Badges</button>
+              <button id="btn-menu-settings" class="secondary-btn menu-sec-btn" type="button">⚙️ Settings</button>
             </div>
           </div>
         </div>
@@ -280,7 +307,10 @@
           <!-- Active Power-up Badges -->
           <div class="hud-powerups-container">
             <span id="hud-shield-pill" class="hud-powerup-pill shield-pill hidden">🛡️ SHIELD</span>
-            <span id="hud-proxy-pill" class="hud-powerup-pill proxy-pill hidden">👻 PROXY: 3s</span>
+            <span id="hud-proxy-pill" class="hud-powerup-pill proxy-pill hidden">👻 PROXY: 5s</span>
+            <span id="hud-speed-pill" class="hud-powerup-pill speed-pill hidden">⚡ SPEED: 6s</span>
+            <span id="hud-notes-pill" class="hud-powerup-pill notes-pill hidden">📝 NOTES: 5s</span>
+            <span id="hud-bunk-pill" class="hud-powerup-pill bunk-pill hidden">❄️ BUNK: 3s</span>
           </div>
 
           <!-- Countdown Timer -->
@@ -327,7 +357,141 @@
             </div>
           </div>
 
+          <!-- Animated Random Event Banner (Power Cut, Surprise Test, Canteen Open) -->
+          <div id="random-event-banner" class="random-event-banner hidden">
+            <div class="event-banner-inner">
+              <span id="random-event-icon" class="event-banner-icon">⚠️</span>
+              <span id="random-event-text">RANDOM EVENT: POWER CUT!</span>
+            </div>
+          </div>
+
           <!-- Overlays inside Canvas Wrapper -->
+
+        <!-- Intro Cutscene Overlay (Skippable) -->
+        <div id="intro-cutscene-overlay" class="game-modal-overlay hidden">
+          <div class="modal-card cutscene-card">
+            <div class="cutscene-clock">🕛 11:59 PM</div>
+            <h2 class="cutscene-title neon-title">MIDNIGHT LOCKDOWN</h2>
+            <div class="cutscene-text-container">
+              <p id="cutscene-line-1" class="cutscene-line"></p>
+              <p id="cutscene-line-2" class="cutscene-line"></p>
+              <p id="cutscene-line-3" class="cutscene-line text-gold"></p>
+            </div>
+            <button id="btn-skip-cutscene" class="primary-btn" type="button">⚡ PRESS SPACE / TAP TO SKIP</button>
+          </div>
+        </div>
+
+        <!-- Achievement Unlock Toast -->
+        <div id="achievement-toast" class="achievement-toast hidden">
+          <span class="toast-icon">🏆</span>
+          <div class="toast-body">
+            <span class="toast-title">ACHIEVEMENT UNLOCKED!</span>
+            <span id="toast-name" class="toast-name">Boss Slayer</span>
+          </div>
+        </div>
+
+        <!-- Stats & Achievements Modal -->
+        <div id="stats-modal" class="game-modal-overlay hidden">
+          <div class="modal-card stats-modal-card">
+            <div class="modal-badge-info">STUDENT TRANSCRIPT</div>
+            <h2 class="modal-title text-gold">CAREER STATS &amp; BADGES</h2>
+            
+            <div class="stats-summary-grid">
+              <div class="stat-box"><span class="stat-label">BEST SCORE</span><span id="stat-best-score" class="stat-value">0</span></div>
+              <div class="stat-box"><span class="stat-label">BEST TIME</span><span id="stat-best-time" class="stat-value">--:--</span></div>
+              <div class="stat-box"><span class="stat-label">ESCAPES (WINS)</span><span id="stat-total-wins" class="stat-value">0</span></div>
+              <div class="stat-box"><span class="stat-label">EXPULSIONS</span><span id="stat-total-deaths" class="stat-value">0</span></div>
+              <div class="stat-box"><span class="stat-label">KEYS FOUND</span><span id="stat-total-keys" class="stat-value">0</span></div>
+              <div class="stat-box"><span class="stat-label">RUNS PLAYED</span><span id="stat-total-runs" class="stat-value">0</span></div>
+            </div>
+
+            <div class="achievements-section">
+              <span class="achievements-header">🏆 BADGES &amp; ACHIEVEMENTS</span>
+              <div class="achievements-grid" id="achievements-list">
+                <!-- Dynamically populated or static template -->
+                <div class="ach-badge" id="ach-zero_damage" title="Escape without taking any damage!">
+                  <span class="ach-icon">🛡️</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Zero Damage Escape</span>
+                    <span class="ach-desc">Flawless survival with 0 damage</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-caffeine_addict" title="Drink 5 coffees in a single run!">
+                  <span class="ach-icon">☕</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Caffeine Addict</span>
+                    <span class="ach-desc">Chug 5 coffees in one run</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-speedrunner" title="Win a run in under 45 seconds!">
+                  <span class="ach-icon">⚡</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Speedrunner</span>
+                    <span class="ach-desc">Escape campus under 45s</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-boss_slayer" title="Defeat The Final Exam Dean!">
+                  <span class="ach-icon">👑</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Boss Slayer</span>
+                    <span class="ach-desc">Defeat The Final Exam boss</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-ghost_buster" title="Survive a Ghost Senior chase for 10s!">
+                  <span class="ach-icon">👻</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Ghost Buster</span>
+                    <span class="ach-desc">Survive Ghost Senior 10s</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-night_owl" title="Win on Final Year Nightmare difficulty!">
+                  <span class="ach-icon">🦉</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Night Owl</span>
+                    <span class="ach-desc">Win on Final Year difficulty</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button id="btn-close-stats" class="primary-btn" type="button">⚡ CLOSE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="game-modal-overlay hidden">
+          <div class="modal-card settings-card">
+            <div class="modal-badge-info">CONFIGURATION</div>
+            <h2 class="modal-title text-gold">SETTINGS</h2>
+
+            <div class="settings-rows">
+              <div class="setting-row">
+                <span class="setting-name">🔊 Master Volume</span>
+                <input type="range" id="volume-slider" min="0" max="100" value="100" class="volume-slider">
+                <span id="volume-val-display" class="setting-val-tag">100%</span>
+              </div>
+              <div class="setting-row">
+                <span class="setting-name">🎵 Sound Effects &amp; BGM</span>
+                <button id="btn-setting-sound" class="secondary-btn" type="button">Sound: ON</button>
+              </div>
+              <div class="setting-row">
+                <span class="setting-name">📳 Screen Shake</span>
+                <button id="btn-setting-shake" class="secondary-btn" type="button">Shake: ON</button>
+              </div>
+              <div class="setting-row">
+                <span class="setting-name">📖 Survival Guide</span>
+                <button id="btn-setting-htp" class="secondary-btn" type="button">How to Play</button>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button id="btn-close-settings" class="primary-btn" type="button">⚡ SAVE &amp; CLOSE</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Pause Overlay -->
         <div id="pause-overlay" class="game-modal-overlay hidden">
           <div class="modal-card">
@@ -335,6 +499,8 @@
             <p class="modal-subtitle">Take a breath, student. The deadlines are waiting.</p>
             <div class="modal-actions">
               <button id="btn-resume-game" class="primary-btn" type="button">▶ Resume</button>
+              <button id="btn-modal-stats" class="secondary-btn" type="button">🏆 Stats</button>
+              <button id="btn-modal-settings" class="secondary-btn" type="button">⚙️ Settings</button>
               <button id="btn-modal-restart" class="secondary-btn" type="button">🔄 Restart</button>
             </div>
           </div>
@@ -383,6 +549,7 @@
             </div>
 
             <div class="modal-actions">
+              <button id="btn-gameover-share" class="secondary-btn share-btn" type="button">📋 Share Daily Result</button>
               <button id="btn-gameover-restart" class="primary-btn" type="button">🔄 Try Again</button>
               <button id="btn-gameover-home" class="secondary-btn" type="button">🏠 Main Menu</button>
             </div>
@@ -407,7 +574,11 @@
               </div>
             </div>
 
+            <div class="credit-line-box">
+              <span class="funny-credit">“No students were harmed, only GPAs.”</span>
+            </div>
             <div class="modal-actions">
+              <button id="btn-victory-share" class="secondary-btn share-btn" type="button">📋 Share Daily Result</button>
               <button id="btn-victory-restart" class="primary-btn pulse-glow" type="button">⚡ Play Again</button>
               <button id="btn-victory-home" class="secondary-btn" type="button">🏠 Main Menu</button>
             </div>
@@ -437,13 +608,18 @@
           <span>💡 <strong>Tip:</strong> Grab 🛡️ Attendance Shields to absorb hits, and 👻 Proxy Attendance to turn invisible!</span>
         </div>
         
-        <!-- On-Screen Touch / D-pad Controls for Mobile / Click -->
-        <div class="dpad-container" id="dpad-controls">
-          <button class="dpad-btn dpad-up" id="dpad-up" aria-label="Up">▲</button>
-          <div class="dpad-row">
-            <button class="dpad-btn dpad-left" id="dpad-left" aria-label="Left">◄</button>
-            <button class="dpad-btn dpad-down" id="dpad-down" aria-label="Down">▼</button>
-            <button class="dpad-btn dpad-right" id="dpad-right" aria-label="Right">►</button>
+        <!-- Virtual Joystick for Touch / D-pad Controls for Mobile -->
+        <div class="mobile-controls-wrapper">
+          <div id="virtual-joystick" class="virtual-joystick">
+            <div id="joystick-knob" class="joystick-knob"></div>
+          </div>
+          <div class="dpad-container" id="dpad-controls">
+            <button class="dpad-btn dpad-up" id="dpad-up" aria-label="Up">▲</button>
+            <div class="dpad-row">
+              <button class="dpad-btn dpad-left" id="dpad-left" aria-label="Left">◄</button>
+              <button class="dpad-btn dpad-down" id="dpad-down" aria-label="Down">▼</button>
+              <button class="dpad-btn dpad-right" id="dpad-right" aria-label="Right">►</button>
+            </div>
           </div>
         </div>
       </footer>
@@ -456,5 +632,13 @@
   <script src="js/map.js"></script>
   <script src="js/entities.js"></script>
   <script src="js/game.js"></script>
+  <!-- Service Worker Registration for PWA Offline Play -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
