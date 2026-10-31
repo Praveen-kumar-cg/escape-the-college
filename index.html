@@ -70,6 +70,131 @@
       </div>
     </div>
 
+    <!-- Intro Cutscene Overlay (Skippable) -->
+        <div id="intro-cutscene-overlay" class="game-modal-overlay hidden">
+          <div class="modal-card cutscene-card">
+            <div class="cutscene-clock">🕛 11:59 PM</div>
+            <h2 class="cutscene-title neon-title">MIDNIGHT LOCKDOWN</h2>
+            <div class="cutscene-text-container">
+              <p id="cutscene-line-1" class="cutscene-line"></p>
+              <p id="cutscene-line-2" class="cutscene-line"></p>
+              <p id="cutscene-line-3" class="cutscene-line text-gold"></p>
+            </div>
+            <button id="btn-skip-cutscene" class="primary-btn" type="button">⚡ PRESS SPACE / TAP TO SKIP</button>
+          </div>
+        </div>
+
+        <!-- Achievement Unlock Toast -->
+        <div id="achievement-toast" class="achievement-toast hidden">
+          <span class="toast-icon">🏆</span>
+          <div class="toast-body">
+            <span class="toast-title">ACHIEVEMENT UNLOCKED!</span>
+            <span id="toast-name" class="toast-name">Boss Slayer</span>
+          </div>
+        </div>
+
+        <!-- Stats & Achievements Modal -->
+        <div id="stats-modal" class="game-modal-overlay hidden">
+          <div class="modal-card stats-modal-card">
+            <div class="modal-badge-info">STUDENT TRANSCRIPT</div>
+            <h2 class="modal-title text-gold">CAREER STATS &amp; BADGES</h2>
+            
+            <div class="stats-summary-grid">
+              <div class="stat-box"><span class="stat-label">BEST SCORE</span><span id="stat-best-score" class="stat-value">0</span></div>
+              <div class="stat-box"><span class="stat-label">BEST TIME</span><span id="stat-best-time" class="stat-value">--:--</span></div>
+              <div class="stat-box"><span class="stat-label">ESCAPES (WINS)</span><span id="stat-total-wins" class="stat-value">0</span></div>
+              <div class="stat-box"><span class="stat-label">EXPULSIONS</span><span id="stat-total-deaths" class="stat-value">0</span></div>
+              <div class="stat-box"><span class="stat-label">KEYS FOUND</span><span id="stat-total-keys" class="stat-value">0</span></div>
+              <div class="stat-box"><span class="stat-label">RUNS PLAYED</span><span id="stat-total-runs" class="stat-value">0</span></div>
+            </div>
+
+            <div class="achievements-section">
+              <span class="achievements-header">🏆 BADGES &amp; ACHIEVEMENTS</span>
+              <div class="achievements-grid" id="achievements-list">
+                <!-- Dynamically populated or static template -->
+                <div class="ach-badge" id="ach-zero_damage" title="Escape without taking any damage!">
+                  <span class="ach-icon">🛡️</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Zero Damage Escape</span>
+                    <span class="ach-desc">Flawless survival with 0 damage</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-caffeine_addict" title="Drink 5 coffees in a single run!">
+                  <span class="ach-icon">☕</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Caffeine Addict</span>
+                    <span class="ach-desc">Chug 5 coffees in one run</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-speedrunner" title="Win a run in under 45 seconds!">
+                  <span class="ach-icon">⚡</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Speedrunner</span>
+                    <span class="ach-desc">Escape campus under 45s</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-boss_slayer" title="Defeat The Final Exam Dean!">
+                  <span class="ach-icon">👑</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Boss Slayer</span>
+                    <span class="ach-desc">Defeat The Final Exam boss</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-ghost_buster" title="Survive a Ghost Senior chase for 10s!">
+                  <span class="ach-icon">👻</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Ghost Buster</span>
+                    <span class="ach-desc">Survive Ghost Senior 10s</span>
+                  </div>
+                </div>
+                <div class="ach-badge" id="ach-night_owl" title="Win on Final Year Nightmare difficulty!">
+                  <span class="ach-icon">🦉</span>
+                  <div class="ach-info">
+                    <span class="ach-name">Night Owl</span>
+                    <span class="ach-desc">Win on Final Year difficulty</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button id="btn-close-stats" class="primary-btn" type="button">⚡ CLOSE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="game-modal-overlay hidden">
+          <div class="modal-card settings-card">
+            <div class="modal-badge-info">CONFIGURATION</div>
+            <h2 class="modal-title text-gold">SETTINGS</h2>
+
+            <div class="settings-rows">
+              <div class="setting-row">
+                <span class="setting-name">🔊 Master Volume</span>
+                <input type="range" id="volume-slider" min="0" max="100" value="100" class="volume-slider">
+                <span id="volume-val-display" class="setting-val-tag">100%</span>
+              </div>
+              <div class="setting-row">
+                <span class="setting-name">🎵 Sound Effects &amp; BGM</span>
+                <button id="btn-setting-sound" class="secondary-btn" type="button">Sound: ON</button>
+              </div>
+              <div class="setting-row">
+                <span class="setting-name">📳 Screen Shake</span>
+                <button id="btn-setting-shake" class="secondary-btn" type="button">Shake: ON</button>
+              </div>
+              <div class="setting-row">
+                <span class="setting-name">📖 Survival Guide</span>
+                <button id="btn-setting-htp" class="secondary-btn" type="button">How to Play</button>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button id="btn-close-settings" class="primary-btn" type="button">⚡ SAVE &amp; CLOSE</button>
+            </div>
+          </div>
+        </div>
+
     <!-- ==================== 1. START SCREEN: MIDNIGHT LIBRARY ==================== -->
     <section id="start-screen" class="screen active">
       <div class="midnight-library-container">
@@ -367,130 +492,7 @@
 
           <!-- Overlays inside Canvas Wrapper -->
 
-        <!-- Intro Cutscene Overlay (Skippable) -->
-        <div id="intro-cutscene-overlay" class="game-modal-overlay hidden">
-          <div class="modal-card cutscene-card">
-            <div class="cutscene-clock">🕛 11:59 PM</div>
-            <h2 class="cutscene-title neon-title">MIDNIGHT LOCKDOWN</h2>
-            <div class="cutscene-text-container">
-              <p id="cutscene-line-1" class="cutscene-line"></p>
-              <p id="cutscene-line-2" class="cutscene-line"></p>
-              <p id="cutscene-line-3" class="cutscene-line text-gold"></p>
-            </div>
-            <button id="btn-skip-cutscene" class="primary-btn" type="button">⚡ PRESS SPACE / TAP TO SKIP</button>
-          </div>
-        </div>
-
-        <!-- Achievement Unlock Toast -->
-        <div id="achievement-toast" class="achievement-toast hidden">
-          <span class="toast-icon">🏆</span>
-          <div class="toast-body">
-            <span class="toast-title">ACHIEVEMENT UNLOCKED!</span>
-            <span id="toast-name" class="toast-name">Boss Slayer</span>
-          </div>
-        </div>
-
-        <!-- Stats & Achievements Modal -->
-        <div id="stats-modal" class="game-modal-overlay hidden">
-          <div class="modal-card stats-modal-card">
-            <div class="modal-badge-info">STUDENT TRANSCRIPT</div>
-            <h2 class="modal-title text-gold">CAREER STATS &amp; BADGES</h2>
-            
-            <div class="stats-summary-grid">
-              <div class="stat-box"><span class="stat-label">BEST SCORE</span><span id="stat-best-score" class="stat-value">0</span></div>
-              <div class="stat-box"><span class="stat-label">BEST TIME</span><span id="stat-best-time" class="stat-value">--:--</span></div>
-              <div class="stat-box"><span class="stat-label">ESCAPES (WINS)</span><span id="stat-total-wins" class="stat-value">0</span></div>
-              <div class="stat-box"><span class="stat-label">EXPULSIONS</span><span id="stat-total-deaths" class="stat-value">0</span></div>
-              <div class="stat-box"><span class="stat-label">KEYS FOUND</span><span id="stat-total-keys" class="stat-value">0</span></div>
-              <div class="stat-box"><span class="stat-label">RUNS PLAYED</span><span id="stat-total-runs" class="stat-value">0</span></div>
-            </div>
-
-            <div class="achievements-section">
-              <span class="achievements-header">🏆 BADGES &amp; ACHIEVEMENTS</span>
-              <div class="achievements-grid" id="achievements-list">
-                <!-- Dynamically populated or static template -->
-                <div class="ach-badge" id="ach-zero_damage" title="Escape without taking any damage!">
-                  <span class="ach-icon">🛡️</span>
-                  <div class="ach-info">
-                    <span class="ach-name">Zero Damage Escape</span>
-                    <span class="ach-desc">Flawless survival with 0 damage</span>
-                  </div>
-                </div>
-                <div class="ach-badge" id="ach-caffeine_addict" title="Drink 5 coffees in a single run!">
-                  <span class="ach-icon">☕</span>
-                  <div class="ach-info">
-                    <span class="ach-name">Caffeine Addict</span>
-                    <span class="ach-desc">Chug 5 coffees in one run</span>
-                  </div>
-                </div>
-                <div class="ach-badge" id="ach-speedrunner" title="Win a run in under 45 seconds!">
-                  <span class="ach-icon">⚡</span>
-                  <div class="ach-info">
-                    <span class="ach-name">Speedrunner</span>
-                    <span class="ach-desc">Escape campus under 45s</span>
-                  </div>
-                </div>
-                <div class="ach-badge" id="ach-boss_slayer" title="Defeat The Final Exam Dean!">
-                  <span class="ach-icon">👑</span>
-                  <div class="ach-info">
-                    <span class="ach-name">Boss Slayer</span>
-                    <span class="ach-desc">Defeat The Final Exam boss</span>
-                  </div>
-                </div>
-                <div class="ach-badge" id="ach-ghost_buster" title="Survive a Ghost Senior chase for 10s!">
-                  <span class="ach-icon">👻</span>
-                  <div class="ach-info">
-                    <span class="ach-name">Ghost Buster</span>
-                    <span class="ach-desc">Survive Ghost Senior 10s</span>
-                  </div>
-                </div>
-                <div class="ach-badge" id="ach-night_owl" title="Win on Final Year Nightmare difficulty!">
-                  <span class="ach-icon">🦉</span>
-                  <div class="ach-info">
-                    <span class="ach-name">Night Owl</span>
-                    <span class="ach-desc">Win on Final Year difficulty</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-actions">
-              <button id="btn-close-stats" class="primary-btn" type="button">⚡ CLOSE</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Settings Modal -->
-        <div id="settings-modal" class="game-modal-overlay hidden">
-          <div class="modal-card settings-card">
-            <div class="modal-badge-info">CONFIGURATION</div>
-            <h2 class="modal-title text-gold">SETTINGS</h2>
-
-            <div class="settings-rows">
-              <div class="setting-row">
-                <span class="setting-name">🔊 Master Volume</span>
-                <input type="range" id="volume-slider" min="0" max="100" value="100" class="volume-slider">
-                <span id="volume-val-display" class="setting-val-tag">100%</span>
-              </div>
-              <div class="setting-row">
-                <span class="setting-name">🎵 Sound Effects &amp; BGM</span>
-                <button id="btn-setting-sound" class="secondary-btn" type="button">Sound: ON</button>
-              </div>
-              <div class="setting-row">
-                <span class="setting-name">📳 Screen Shake</span>
-                <button id="btn-setting-shake" class="secondary-btn" type="button">Shake: ON</button>
-              </div>
-              <div class="setting-row">
-                <span class="setting-name">📖 Survival Guide</span>
-                <button id="btn-setting-htp" class="secondary-btn" type="button">How to Play</button>
-              </div>
-            </div>
-
-            <div class="modal-actions">
-              <button id="btn-close-settings" class="primary-btn" type="button">⚡ SAVE &amp; CLOSE</button>
-            </div>
-          </div>
-        </div>
+        
 
         <!-- Pause Overlay -->
         <div id="pause-overlay" class="game-modal-overlay hidden">

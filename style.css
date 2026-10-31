@@ -1337,18 +1337,18 @@ body {
 
 /* Overlays on Canvas */
 .game-modal-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(5, 8, 18, 0.85);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(5, 8, 18, 0.88);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 50;
+  z-index: 1000;
   animation: fadeIn 0.2s ease;
 }
 
@@ -1790,7 +1790,7 @@ body {
 
 /* Achievement Toast Notification */
 .achievement-toast {
-  position: absolute;
+  position: fixed;
   top: 18px;
   left: 50%;
   transform: translateX(-50%);

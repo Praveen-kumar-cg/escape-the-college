@@ -82,6 +82,10 @@ class CollegeMap {
   // ==========================================================================
   // PROCEDURAL MAP GENERATION (Randomized on every try!)
   // ==========================================================================
+  rng() {
+    return (window.escapeGame && window.escapeGame.rng ? window.escapeGame.rng() : Math.random());
+  }
+
   generate(level = 1) {
     this.level = level;
     this.exitUnlocked = false;
@@ -126,7 +130,7 @@ class CollegeMap {
     this.grid[7][libDoorC] = TILE_HALLWAY;
     this.doors.push({ col: libDoorC, row: 7 });
 
-    if (Math.random() < 0.6) {
+    if (this.rng() < 0.6) {
       const libSideR = this.randomChoice([3, 4, 5]);
       this.grid[libSideR][6] = TILE_HALLWAY;
       this.doors.push({ col: 6, row: libSideR });
@@ -175,7 +179,7 @@ class CollegeMap {
 
   generateRoomObstacles() {
     // A. LIBRARY: Vertical Bookshelves with center aisle
-    const libStyle = Math.floor(Math.random() * 3);
+    const libStyle = Math.floor(this.rng() * 3);
     if (libStyle === 0) {
       [2, 4].forEach(c => {
         [2, 3, 5].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
@@ -190,7 +194,7 @@ class CollegeMap {
     }
 
     // B. COMPUTER LAB: Workstations with flickering monitors
-    const labStyle = Math.floor(Math.random() * 3);
+    const labStyle = Math.floor(this.rng() * 3);
     if (labStyle === 0) {
       [10, 11, 13, 14].forEach(c => {
         [2, 4].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
@@ -207,7 +211,7 @@ class CollegeMap {
     }
 
     // C. FACULTY LOUNGE: Coffee Bar & Conference Tables
-    const loungeStyle = Math.floor(Math.random() * 3);
+    const loungeStyle = Math.floor(this.rng() * 3);
     if (loungeStyle === 0) {
       [18, 19].forEach(c => { this.grid[2][c] = TILE_OBSTACLE; });
       [21, 22].forEach(c => { this.grid[4][c] = TILE_OBSTACLE; });
@@ -222,7 +226,7 @@ class CollegeMap {
     }
 
     // D. STUDY HALL: Study Desks & Lamps
-    const studyStyle = Math.floor(Math.random() * 3);
+    const studyStyle = Math.floor(this.rng() * 3);
     if (studyStyle === 0) {
       [2, 3, 6, 7].forEach(c => {
         [12, 15].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
@@ -238,7 +242,7 @@ class CollegeMap {
     }
 
     // E. LECTURE HALL: Tiered Auditorium Rows
-    const lectureStyle = Math.floor(Math.random() * 3);
+    const lectureStyle = Math.floor(this.rng() * 3);
     if (lectureStyle === 0) {
       [13, 14, 15, 17, 18, 19].forEach(c => {
         [12, 14].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
@@ -288,7 +292,7 @@ class CollegeMap {
   }
 
   randomChoice(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+    return arr[Math.floor(this.rng() * arr.length)];
   }
 
   getWalkableTilesInArea(minCol, maxCol, minRow, maxRow) {

@@ -230,6 +230,7 @@ class EscapeGame {
       startBtn.addEventListener('click', () => {
         if (this.isStarting) return;
         this.isStarting = true;
+        this.isDailyChallenge = false;
 
         if (window.soundManager) {
           window.soundManager.init();
@@ -237,19 +238,14 @@ class EscapeGame {
         }
 
         const flash = document.getElementById('start-flash-overlay');
-        if (flash) {
-          flash.classList.add('flash-active');
-        }
-
+        if (flash) flash.classList.add('flash-active');
         this.startScreen.classList.add('start-fade-out');
 
         setTimeout(() => {
           if (flash) flash.classList.remove('flash-active');
           this.startScreen.classList.remove('start-fade-out');
 
-          if (window.soundManager) {
-            window.soundManager.startBgm();
-          }
+          if (window.soundManager) window.soundManager.startBgm();
           this.playIntroCutscene(() => {
             this.startLevel(1);
             this.isStarting = false;
@@ -257,6 +253,91 @@ class EscapeGame {
         }, 650);
       });
     }
+
+    // Daily Challenge Button
+    const dailyBtn = document.getElementById('start-daily-btn');
+    if (dailyBtn) {
+      dailyBtn.addEventListener('click', () => {
+        if (this.isStarting) return;
+        this.isStarting = true;
+        this.isDailyChallenge = true;
+        this.dailyPRNG = this.createPRNG(this.getDailySeed());
+
+        if (window.soundManager) {
+          window.soundManager.init();
+          window.soundManager.playClockChime();
+        }
+
+        const flash = document.getElementById('start-flash-overlay');
+        if (flash) flash.classList.add('flash-active');
+        this.startScreen.classList.add('start-fade-out');
+
+        setTimeout(() => {
+          if (flash) flash.classList.remove('flash-active');
+          this.startScreen.classList.remove('start-fade-out');
+
+          if (window.soundManager) window.soundManager.startBgm();
+          this.playIntroCutscene(() => {
+            this.startLevel(1);
+            this.isStarting = false;
+          });
+        }, 650);
+      });
+    }
+
+    // Difficulty Selector Buttons
+    const diffButtons = (typeof document !== 'undefined' && document.querySelectorAll) ? document.querySelectorAll('.diff-btn') : [];
+    const oneHitCheck = document.getElementById('one-hit-checkbox');
+
+    // Sync initial active state from loaded persistence
+    diffButtons.forEach(btn => {
+      if (btn.dataset.diff === this.difficulty) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+      btn.addEventListener('click', () => {
+        diffButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.difficulty = btn.dataset.diff;
+        try { localStorage.setItem('etc_difficulty', this.difficulty); } catch (e) {}
+
+        if (this.difficulty === 'final_year') {
+          this.oneHitElimination = true;
+          if (oneHitCheck) oneHitCheck.checked = true;
+          try { localStorage.setItem('etc_one_hit', 'true'); } catch (e) {}
+        }
+        if (window.soundManager) window.soundManager.playClick();
+      });
+    });
+
+    // One-Hit Ends Run Checkbox
+    if (oneHitCheck) {
+      oneHitCheck.checked = this.oneHitElimination;
+      oneHitCheck.addEventListener('change', (e) => {
+        this.oneHitElimination = e.target.checked;
+        try { localStorage.setItem('etc_one_hit', this.oneHitElimination.toString()); } catch (err) {}
+        if (window.soundManager) window.soundManager.playClick();
+      });
+    }
+
+    // Student Skin Picker Buttons
+    const skinButtons = (typeof document !== 'undefined' && document.querySelectorAll) ? document.querySelectorAll('.skin-btn') : [];
+    skinButtons.forEach(btn => {
+      if (btn.dataset.skin === this.selectedSkin) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+      btn.addEventListener('click', () => {
+        skinButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.selectedSkin = btn.dataset.skin;
+        if (this.player) this.player.skin = this.selectedSkin;
+        try { localStorage.setItem('etc_skin', this.selectedSkin); } catch (e) {}
+        if (window.soundManager) window.soundManager.playClick();
+      });
+    });
 
     // How to Play Modal
     const htpBtn = document.getElementById('btn-how-to-play');
@@ -276,18 +357,126 @@ class EscapeGame {
       });
     }
 
+    // Stats & Badges Modal
+    const btnMenuStats = document.getElementById('btn-menu-stats');
+    const btnModalStats = document.getElementById('btn-modal-stats');
+    const btnCloseStats = document.getElementById('btn-close-stats');
+    const statsModal = document.getElementById('stats-modal');
+
+    const openStats = () => {
+      this.updateStatsModal();
+      if (statsModal) statsModal.classList.remove('hidden');
+      if (window.soundManager) window.soundManager.playClick();
+    };
+    if (btnMenuStats) btnMenuStats.addEventListener('click', openStats);
+    if (btnModalStats) btnModalStats.addEventListener('click', openStats);
+    if (btnCloseStats && statsModal) {
+      btnCloseStats.addEventListener('click', () => {
+        statsModal.classList.add('hidden');
+        if (window.soundManager) window.soundManager.playClick();
+      });
+    }
+
+    // Settings Modal
+    const btnMenuSettings = document.getElementById('btn-menu-settings');
+    const btnModalSettings = document.getElementById('btn-modal-settings');
+    const btnCloseSettings = document.getElementById('btn-close-settings');
+    const settingsModal = document.getElementById('settings-modal');
+    const volSlider = document.getElementById('volume-slider');
+    const volDisplay = document.getElementById('volume-val-display');
+    const btnSettingSound = document.getElementById('btn-setting-sound');
+    const btnSettingShake = document.getElementById('btn-setting-shake');
+    const btnSettingHtp = document.getElementById('btn-setting-htp');
+
+    const openSettings = () => {
+      if (volSlider && window.soundManager) {
+        volSlider.value = Math.round(window.soundManager.masterVolume * 100);
+        if (volDisplay) volDisplay.textContent = `${volSlider.value}%`;
+      }
+      if (btnSettingSound && window.soundManager) {
+        btnSettingSound.textContent = window.soundManager.muted ? "Sound: OFF" : "Sound: ON";
+      }
+      if (btnSettingShake) {
+        btnSettingShake.textContent = this.screenShakeEnabled ? "Shake: ON" : "Shake: OFF";
+      }
+      if (settingsModal) settingsModal.classList.remove('hidden');
+      if (window.soundManager) window.soundManager.playClick();
+    };
+
+    if (btnMenuSettings) btnMenuSettings.addEventListener('click', openSettings);
+    if (btnModalSettings) btnModalSettings.addEventListener('click', openSettings);
+    if (btnCloseSettings && settingsModal) {
+      btnCloseSettings.addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+        if (window.soundManager) window.soundManager.playClick();
+      });
+    }
+
+    // Volume Slider Handler
+    if (volSlider && window.soundManager) {
+      volSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value) / 100;
+        window.soundManager.setMasterVolume(val);
+        if (volDisplay) volDisplay.textContent = `${e.target.value}%`;
+      });
+    }
+
+    // Sound Setting Button
+    if (btnSettingSound && window.soundManager) {
+      btnSettingSound.addEventListener('click', () => {
+        const isMuted = window.soundManager.toggleMute();
+        btnSettingSound.textContent = isMuted ? "Sound: OFF" : "Sound: ON";
+        if (menuSoundBtn) menuSoundBtn.textContent = isMuted ? "🔇 Sound: Off" : "🔊 Sound: On";
+        if (hudSoundBtn) hudSoundBtn.textContent = isMuted ? '🔇' : '🔊';
+      });
+    }
+
+    // Screen Shake Setting Button
+    if (btnSettingShake) {
+      btnSettingShake.addEventListener('click', () => {
+        this.screenShakeEnabled = !this.screenShakeEnabled;
+        btnSettingShake.textContent = this.screenShakeEnabled ? "Shake: ON" : "Shake: OFF";
+        try { localStorage.setItem('etc_screenshake', this.screenShakeEnabled.toString()); } catch (e) {}
+        if (window.soundManager) window.soundManager.playClick();
+      });
+    }
+
+    // Setting How-to-Play link
+    if (btnSettingHtp) {
+      btnSettingHtp.addEventListener('click', () => {
+        if (settingsModal) settingsModal.classList.add('hidden');
+        if (htpModal) htpModal.classList.remove('hidden');
+        if (window.soundManager) window.soundManager.playClick();
+      });
+    }
+
+    // Close Modals on Clicking Background Overlay
+    [htpModal, statsModal, settingsModal].forEach(modal => {
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.add('hidden');
+            if (window.soundManager) window.soundManager.playClick();
+          }
+        });
+      }
+    });
+
     // Start Menu Sound Toggle Button
     const menuSoundBtn = document.getElementById('btn-menu-sound');
     const hudSoundBtn = document.getElementById('btn-sound-toggle');
 
-    if (menuSoundBtn) {
+    if (menuSoundBtn && window.soundManager) {
+      menuSoundBtn.textContent = window.soundManager.muted ? '🔇 Sound: Off' : '🔊 Sound: On';
       menuSoundBtn.addEventListener('click', () => {
         const isMuted = window.soundManager.toggleMute();
-        const soundLabel = isMuted ? '🔇 Sound: Off' : '🔊 Sound: On';
-        menuSoundBtn.textContent = soundLabel;
+        menuSoundBtn.textContent = isMuted ? '🔇 Sound: Off' : '🔊 Sound: On';
         if (hudSoundBtn) {
           hudSoundBtn.textContent = isMuted ? '🔇' : '🔊';
           hudSoundBtn.title = isMuted ? 'Unmute Sound' : 'Mute Sound';
+        }
+        if (btnSettingSound) {
+          btnSettingSound.textContent = isMuted ? "Sound: OFF" : "Sound: ON";
         }
       });
     }
@@ -297,18 +486,18 @@ class EscapeGame {
     document.getElementById('btn-restart-game').addEventListener('click', () => this.restartGame());
 
     // Sound Toggle (HUD)
-    if (hudSoundBtn) {
+    if (hudSoundBtn && window.soundManager) {
+      hudSoundBtn.textContent = window.soundManager.muted ? '🔇' : '🔊';
       hudSoundBtn.addEventListener('click', () => {
         const isMuted = window.soundManager.toggleMute();
         hudSoundBtn.textContent = isMuted ? '🔇' : '🔊';
         hudSoundBtn.title = isMuted ? 'Unmute Sound' : 'Mute Sound';
-        if (menuSoundBtn) {
-          menuSoundBtn.textContent = isMuted ? '🔇 Sound: Off' : '🔊 Sound: On';
-        }
+        if (menuSoundBtn) menuSoundBtn.textContent = isMuted ? '🔇 Sound: Off' : '🔊 Sound: On';
+        if (btnSettingSound) btnSettingSound.textContent = isMuted ? "Sound: OFF" : "Sound: ON";
       });
     }
 
-    // Fullscreen Toggle (Great for Projectors and Mobile)
+    // Fullscreen Toggle
     const fsBtn = document.getElementById('btn-fullscreen-toggle');
     if (fsBtn) {
       fsBtn.addEventListener('click', () => this.toggleFullscreen());
@@ -341,12 +530,15 @@ class EscapeGame {
     window.addEventListener('keydown', (e) => this.handleKeyDown(e));
     window.addEventListener('keyup', (e) => this.handleKeyUp(e));
 
-    // Touch / D-Pad Buttons (Enhanced for Mobile Ergonomics)
+    // Touch / D-Pad Buttons
     this.bindDpad();
 
     // Prevent default touch pull-to-refresh on canvas
     this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
     this.canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+    // Mobile Virtual Touch Joystick
+    this.initVirtualJoystick();
   }
 
   // Toggle Projector / Mobile Fullscreen
@@ -738,7 +930,7 @@ class EscapeGame {
 
     const pickRandomTile = (tiles) => {
       if (!tiles || tiles.length === 0) return { col: 3, row: 13 };
-      const idx = Math.floor(Math.random() * tiles.length);
+      const idx = Math.floor(this.rng() * tiles.length);
       return tiles.splice(idx, 1)[0];
     };
 
