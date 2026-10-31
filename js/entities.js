@@ -1,10 +1,74 @@
 /**
- * entities.js - Game Entities: Player, Enemies, Keys, and Power-Ups
- * Features: Attendance Shield, Proxy Attendance (Invisibility), and Coffee Pickups.
+ * entities.js - Game Entities: Player, Enemies, Keys, Power-Ups, and Particles
+ * Upgraded with:
+ * - Ghost motion trail & walk animations
+ * - Particle burst system for item pickups
+ * - Pulsing neon glow auras on all collectibles
+ * - Attendance Shield & Proxy Attendance mechanics
  */
 
 // ============================================================================
-// 1. PLAYER CLASS
+// 1. PARTICLE BURST SYSTEM
+// ============================================================================
+class ParticleSystem {
+  constructor() {
+    this.particles = [];
+  }
+
+  reset() {
+    this.particles = [];
+  }
+
+  addBurst(x, y, color, count = 10, speed = 65) {
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+      const spd = speed * (0.6 + Math.random() * 0.8);
+      this.particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
+        color: color,
+        size: 2.5 + Math.random() * 2,
+        life: 0.45,
+        maxLife: 0.45
+      });
+    }
+  }
+
+  update(dt) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+      if (p.life <= 0) {
+        this.particles.splice(i, 1);
+      }
+    }
+  }
+
+  draw(ctx) {
+    this.particles.forEach(p => {
+      const alpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+}
+
+// Global Particle Instance
+window.particleSystem = new ParticleSystem();
+
+// ============================================================================
+// 2. PLAYER CLASS
 // ============================================================================
 class Player {
   constructor(x, y) {
@@ -31,6 +95,10 @@ class Player {
     // Power-ups
     this.hasShield = false; // Attendance Shield: absorbs 1 hit
     this.proxyTimer = 0;    // Proxy Attendance: invisibility duration in seconds
+
+    // Visual Dash Trail
+    this.trail = [];
+    this.trailTimer = 0;
   }
 
   // Update position with smooth separate-axis collision detection
@@ -60,16 +128,37 @@ class Player {
       // Move X first and check collision (allows sliding along walls)
       this.x += moveX;
       if (map.checkCollision(this.x, this.y, this.width, this.height)) {
-        this.x -= moveX; // revert X
+        this.x -= moveX;
       }
 
       // Move Y next and check collision
       this.y += moveY;
       if (map.checkCollision(this.x, this.y, this.width, this.height)) {
-        this.y -= moveY; // revert Y
+        this.y -= moveY;
+      }
+
+      // Add faint ghost dash trail
+      this.trailTimer += dt;
+      if (this.trailTimer >= 0.05) {
+        this.trailTimer = 0;
+        this.trail.push({
+          x: this.x,
+          y: this.y,
+          life: 0.22,
+          maxLife: 0.22
+        });
+        if (this.trail.length > 5) this.trail.shift();
       }
     } else {
       this.walkCycle = 0;
+    }
+
+    // Tick motion trail
+    for (let i = this.trail.length - 1; i >= 0; i--) {
+      this.trail[i].life -= dt;
+      if (this.trail[i].life <= 0) {
+        this.trail.splice(i, 1);
+      }
     }
 
     // Tick invulnerability timer
@@ -93,7 +182,7 @@ class Player {
     // Update floating texts
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const ft = this.floatingTexts[i];
-      ft.y -= 25 * dt;
+      ft.y -= 28 * dt;
       ft.life -= dt;
       if (ft.life <= 0) {
         this.floatingTexts.splice(i, 1);
@@ -110,8 +199,9 @@ class Player {
     if (this.hasShield) {
       this.hasShield = false;
       this.invulnTimer = 1.0;
-      this.addFloatingText('SHIELD BLOCKED HIT! 🛡️', '#38bdf8');
+      this.addFloatingText('SHIELD DEFLECTED! 🛡️', '#38bdf8');
       if (window.soundManager) window.soundManager.playShieldBreak();
+      if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#38bdf8', 12);
       return false; // No damage taken
     }
 
@@ -121,6 +211,12 @@ class Player {
 
     this.addFloatingText(`-${amount} HP`, '#ef4444');
     if (window.soundManager) window.soundManager.playHit();
+    if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#ef4444', 8);
+
+    // Trigger visual screen shake & red flash in game
+    if (window.escapeGame) {
+      window.escapeGame.triggerDamageEffects();
+    }
     return true;
   }
 
@@ -128,18 +224,21 @@ class Player {
     this.health = Math.min(this.maxHealth, this.health + amount);
     this.addFloatingText(`+${amount} HP`, '#10b981');
     if (window.soundManager) window.soundManager.playCoffee();
+    if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#10b981', 8);
   }
 
   activateShield() {
     this.hasShield = true;
     this.addFloatingText('+ATTENDANCE SHIELD! 🛡️', '#38bdf8');
     if (window.soundManager) window.soundManager.playShield();
+    if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#38bdf8', 14);
   }
 
   activateProxy(duration = 3.0) {
     this.proxyTimer = duration;
     this.addFloatingText('+PROXY: INVISIBLE 3s! 👻', '#c084fc');
     if (window.soundManager) window.soundManager.playProxy();
+    if (window.particleSystem) window.particleSystem.addBurst(this.x + 10, this.y + 11, '#c084fc', 14);
   }
 
   addFloatingText(text, color) {
@@ -147,16 +246,28 @@ class Player {
       text: text,
       color: color,
       x: this.x + this.width / 2,
-      y: this.y - 6,
-      life: 0.9
+      y: this.y - 8,
+      life: 0.95
     });
   }
 
-  // Draw student sprite with backpack, walk bounce, shield, and proxy invisibility
+  // Draw student sprite with walk bounce, backpack, dash trail, shield, and proxy aura
   draw(ctx, time) {
+    // 1. Draw Faint Ghost Motion Trail
+    this.trail.forEach(t => {
+      const alpha = (t.life / t.maxLife) * 0.28;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#06b6d4';
+      ctx.shadowColor = '#06b6d4';
+      ctx.shadowBlur = 6;
+      ctx.fillRect(Math.round(t.x + 3), Math.round(t.y + 6), 14, 14);
+      ctx.restore();
+    });
+
     // If invulnerable, blink
     if (this.invulnTimer > 0 && Math.floor(time / 80) % 2 === 0) {
-      return; // Skip frame for flashing effect
+      return;
     }
 
     const bounce = this.isMoving ? Math.sin(this.walkCycle) * 2 : 0;
@@ -165,7 +276,7 @@ class Player {
 
     ctx.save();
 
-    // Proxy Attendance Invisibility effect: Ghostly purple aura and translucency
+    // Proxy Invisibility Effect: Ghostly purple aura and translucency
     if (this.proxyTimer > 0) {
       ctx.globalAlpha = 0.45;
       ctx.shadowColor = '#c084fc';
@@ -173,14 +284,14 @@ class Player {
     }
 
     // Drop shadow under player
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
     ctx.beginPath();
     ctx.ellipse(px + this.width / 2, py + this.height + 1, 9, 4, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Backpack (shows behind student if moving down/left/right)
     if (this.direction !== 'up') {
-      ctx.fillStyle = '#b45309'; // Leather brown backpack
+      ctx.fillStyle = '#b45309';
       ctx.fillRect(px + 4, py + 7, 12, 10);
       ctx.fillStyle = '#f59e0b';
       ctx.fillRect(px + 6, py + 9, 8, 4);
@@ -191,7 +302,7 @@ class Player {
     ctx.fillRect(px + 3, py + 8, 14, 10);
 
     // Head
-    ctx.fillStyle = '#fcd34d'; // Skin tone
+    ctx.fillStyle = '#fcd34d';
     ctx.fillRect(px + 5, py + 1, 10, 8);
 
     // Hair / Cap
@@ -209,14 +320,14 @@ class Player {
       ctx.fillRect(px + 13, py + 4, 2, 2);
     }
 
-    // Legs
-    ctx.fillStyle = '#334155'; // Dark jeans
+    // Legs with walk animation
+    ctx.fillStyle = '#334155';
     const legOffset = this.isMoving ? Math.sin(this.walkCycle) * 3 : 0;
     ctx.fillRect(px + 4, py + 18, 4, 4 + legOffset);
     ctx.fillRect(px + 12, py + 18, 4, 4 - legOffset);
 
     // Shoes
-    ctx.fillStyle = '#f8fafc'; // White sneakers
+    ctx.fillStyle = '#f8fafc';
     ctx.fillRect(px + 3, py + 21 + legOffset, 5, 2);
     ctx.fillRect(px + 12, py + 21 - legOffset, 5, 2);
 
@@ -234,23 +345,23 @@ class Player {
       ctx.arc(px + this.width / 2, py + this.height / 2, 16 + pulse, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Shield orbit icon
+      // Orbiting Shield emoji
       ctx.font = '10px sans-serif';
       ctx.textAlign = 'center';
       const orbitAngle = time * 0.004;
-      const ox = px + this.width / 2 + Math.cos(orbitAngle) * 18;
-      const oy = py + this.height / 2 + Math.sin(orbitAngle) * 18;
+      const ox = px + this.width / 2 + Math.cos(orbitAngle) * 19;
+      const oy = py + this.height / 2 + Math.sin(orbitAngle) * 19;
       ctx.fillText('🛡️', ox, oy);
       ctx.restore();
     }
 
-    // Draw floating notifications
+    // Draw floating notifications with slight float pop
     this.floatingTexts.forEach(ft => {
-      ctx.font = 'bold 11px monospace';
+      ctx.font = "bold 10px 'Press Start 2P', monospace";
       ctx.fillStyle = ft.color;
       ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 4;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+      ctx.shadowBlur = 5;
       ctx.fillText(ft.text, ft.x, ft.y);
       ctx.shadowBlur = 0;
     });
@@ -258,7 +369,7 @@ class Player {
 }
 
 // ============================================================================
-// 2. KEY COLLECTIBLE CLASS
+// 3. KEY COLLECTIBLE CLASS (With Pulsing Golden Glow)
 // ============================================================================
 class KeyItem {
   constructor(id, name, tileCol, tileRow) {
@@ -285,8 +396,17 @@ class KeyItem {
     const ky = this.y + bob;
 
     ctx.save();
-    ctx.shadowColor = '#f59e0b';
-    ctx.shadowBlur = 10;
+    // Pulsing Neon Golden Aura
+    const pulseGlow = 10 + Math.sin(time * 0.008) * 5;
+    ctx.shadowColor = '#fbbf24';
+    ctx.shadowBlur = pulseGlow;
+
+    // Glowing energy ring around key
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(kx + 10, ky + 10, 11 + Math.sin(time * 0.006) * 2, 0, Math.PI * 2);
+    ctx.stroke();
 
     // Ring handle
     ctx.fillStyle = '#fbbf24';
@@ -309,7 +429,7 @@ class KeyItem {
 }
 
 // ============================================================================
-// 3. POWER-UP CLASSES: ATTENDANCE SHIELD & PROXY ATTENDANCE
+// 4. POWER-UP CLASSES: ATTENDANCE SHIELD & PROXY ATTENDANCE
 // ============================================================================
 class AttendanceShieldItem {
   constructor(tileCol, tileRow) {
@@ -334,16 +454,22 @@ class AttendanceShieldItem {
     const sy = this.y + bob;
 
     ctx.save();
+    // Pulsing Cyan Shield Aura
+    const pulseGlow = 12 + Math.sin(time * 0.007) * 5;
     ctx.shadowColor = '#38bdf8';
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = pulseGlow;
 
     // Glowing energy badge
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
     ctx.beginPath();
-    ctx.arc(sx + 10, sy + 10, 11, 0, Math.PI * 2);
+    ctx.arc(sx + 10, sy + 10, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    // Shield emoji / graphic
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Shield emoji
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('🛡️', sx + 10, sy + 15);
@@ -375,14 +501,19 @@ class ProxyAttendanceItem {
     const py = this.y + bob;
 
     ctx.save();
+    // Pulsing Ghost Purple Aura
+    const pulseGlow = 12 + Math.sin(time * 0.008) * 5;
     ctx.shadowColor = '#c084fc';
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = pulseGlow;
 
-    // Glowing ghostly card
     ctx.fillStyle = 'rgba(192, 132, 252, 0.25)';
     ctx.beginPath();
-    ctx.arc(px + 10, py + 10, 11, 0, Math.PI * 2);
+    ctx.arc(px + 10, py + 10, 12, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.strokeStyle = '#c084fc';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
     // Ghost emoji
     ctx.font = '14px sans-serif';
@@ -394,7 +525,7 @@ class ProxyAttendanceItem {
 }
 
 // ============================================================================
-// 4. COFFEE PICKUP CLASS
+// 5. COFFEE PICKUP CLASS (With Warm Steam & Pulsing Glow)
 // ============================================================================
 class CoffeeItem {
   constructor(tileCol, tileRow) {
@@ -419,14 +550,18 @@ class CoffeeItem {
     const cy = this.y + bob;
 
     ctx.save();
-    // Warm steam
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    // Warm coffee glow
+    ctx.shadowColor = '#06b6d4';
+    ctx.shadowBlur = 8 + Math.sin(time * 0.006) * 4;
+
+    // Steam particles
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
     const steamY = (time * 0.02) % 6;
     ctx.fillRect(cx + 4, cy - 3 - steamY, 2, 2);
     ctx.fillRect(cx + 8, cy - 5 - steamY, 2, 2);
 
-    // Coffee Mug
-    ctx.fillStyle = '#0284c7'; // Blue mug
+    // Blue mug
+    ctx.fillStyle = '#0284c7';
     ctx.fillRect(cx + 2, cy + 3, 11, 10);
     // Mug handle
     ctx.strokeStyle = '#0284c7';
@@ -442,7 +577,7 @@ class CoffeeItem {
 }
 
 // ============================================================================
-// 5. ENEMY CLASSES (Strict Professors & Flying Assignments)
+// 6. ENEMY CLASSES (Professors & Flying Assignments)
 // ============================================================================
 class Enemy {
   constructor(type, x, y, options = {}) {
@@ -457,14 +592,13 @@ class Enemy {
       this.height = 26;
       this.speed = options.speed || 80;
       this.damage = options.damage || 20;
-      this.axis = options.axis || 'x'; // 'x' or 'y' patrol
+      this.axis = options.axis || 'x';
       this.minPos = options.minPos || x - 100;
       this.maxPos = options.maxPos || x + 100;
       this.dir = 1;
       this.name = options.name || "Professor";
       this.isDean = !!options.isDean;
     } else {
-      // Flying Assignment
       this.width = 18;
       this.height = 20;
       this.speed = options.speed || 95;
@@ -506,7 +640,6 @@ class Enemy {
         }
       }
     } else {
-      // Flying Assignment: Floating bouncing sheet
       this.x += this.vx * this.speed * dt;
       this.y += this.vy * this.speed * dt;
 
@@ -528,7 +661,7 @@ class Enemy {
     if (this.type === 'professor') {
       ctx.save();
       // Flashlight / Detection beam
-      ctx.fillStyle = this.isDean ? 'rgba(220, 38, 38, 0.18)' : 'rgba(239, 68, 68, 0.12)';
+      ctx.fillStyle = this.isDean ? 'rgba(220, 38, 38, 0.22)' : 'rgba(239, 68, 68, 0.14)';
       ctx.beginPath();
       if (this.axis === 'x') {
         const beamDir = this.dir;
@@ -550,20 +683,20 @@ class Enemy {
       ctx.ellipse(ex + 12, ey + 26, 10, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Suit Coat (Dark Purple or Dean Gold-Black)
+      // Suit Coat
       ctx.fillStyle = this.isDean ? '#1c1917' : '#4c0519';
       ctx.fillRect(ex + 4, ey + 8, 16, 14);
 
       // Shirt & Tie
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(ex + 10, ey + 8, 4, 6);
-      ctx.fillStyle = this.isDean ? '#eab308' : '#dc2626'; // Gold tie for Dean
+      ctx.fillStyle = this.isDean ? '#eab308' : '#dc2626';
       ctx.fillRect(ex + 11, ey + 10, 2, 7);
 
       // Head & Hair
       ctx.fillStyle = '#fde68a';
       ctx.fillRect(ex + 7, ey + 2, 10, 7);
-      ctx.fillStyle = this.isDean ? '#e2e8f0' : '#94a3b8'; // White hair for Dean
+      ctx.fillStyle = this.isDean ? '#e2e8f0' : '#94a3b8';
       ctx.fillRect(ex + 6, ey, 12, 3);
 
       // Glasses & Angry Brow
@@ -580,18 +713,16 @@ class Enemy {
       ctx.restore();
 
     } else {
-      // Flying Assignment (Paper sheet with red F)
+      // Flying Assignment
       ctx.save();
       const flap = Math.sin(time * 0.015) * 3;
 
       ctx.shadowColor = 'rgba(239, 68, 68, 0.6)';
       ctx.shadowBlur = 8;
 
-      // Paper sheet
       ctx.fillStyle = '#f8fafc';
       ctx.fillRect(ex + 2, ey + 2 + flap, 14, 16);
 
-      // Folded corner
       ctx.fillStyle = '#cbd5e1';
       ctx.beginPath();
       ctx.moveTo(ex + 12, ey + 2 + flap);
@@ -600,12 +731,10 @@ class Enemy {
       ctx.closePath();
       ctx.fill();
 
-      // Red 'F' Grade
       ctx.fillStyle = '#ef4444';
       ctx.font = 'bold 9px monospace';
       ctx.fillText('F', ex + 6, ey + 13 + flap);
 
-      // Little spectral wings
       ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
       ctx.beginPath();
       ctx.ellipse(ex - 1, ey + 8 + flap, 4, 6, Math.PI / 4, 0, Math.PI * 2);

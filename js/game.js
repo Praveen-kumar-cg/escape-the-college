@@ -107,6 +107,13 @@ class EscapeGame {
     this.gameOverOverlay = document.getElementById('game-over-overlay');
     this.victoryOverlay = document.getElementById('victory-overlay');
 
+    // Visual Effects & Popup Elements
+    this.damageFlashOverlay = document.getElementById('damage-flash-overlay');
+    this.roomPopup = document.getElementById('room-entry-popup');
+    this.roomPopupName = document.getElementById('room-entry-name');
+    this.storyLogContainer = document.getElementById('story-log-container');
+    this.bestScoreDisplay = document.getElementById('log-best-score-val');
+
     // Overlay Text Elements
     this.levelClearTitle = document.getElementById('levelclear-title');
     this.levelClearReason = document.getElementById('levelclear-reason');
@@ -142,6 +149,15 @@ class EscapeGame {
     this.scoreTimer = 0;
     this.keysCollected = 0;
     this.sessionHighScore = 0;
+
+    // Visual Effects & Story Log State
+    this.screenShake = 0;
+    this.currentRoom = null;
+    this.roomPopupTimer = null;
+    this.storyLogs = [];
+
+    // Global reference for player/map events
+    window.escapeGame = this;
 
     // Loop timing
     this.lastTime = 0;
@@ -579,6 +595,8 @@ class EscapeGame {
     this.timeRemaining = this.totalTime;
     this.keysCollected = 0;
     this.scoreTimer = 0;
+    this.currentRoom = null;
+    this.screenShake = 0;
 
     // Reset Inputs
     this.input.up = false;
@@ -586,13 +604,18 @@ class EscapeGame {
     this.input.left = false;
     this.input.right = false;
 
-    // Update HUD
+    // Update HUD & Story Log
     if (this.levelBadge) {
       this.levelBadge.textContent = `SEMESTER ${this.level} / ${this.maxLevels}`;
     }
     this.statusBanner.classList.remove('alert-open');
     this.statusMessage.textContent = config.objective;
     this.updateHUD();
+
+    this.addStoryLog(`Commenced ${config.name}!`, 'action');
+    if (this.bestScoreDisplay) {
+      this.bestScoreDisplay.textContent = this.sessionHighScore;
+    }
 
     // Start Main Game Loop
     this.state = STATE_PLAYING;
@@ -644,6 +667,217 @@ class EscapeGame {
   }
 
   // ==========================================================================
+  // VISUAL EFFECTS, ROOM POPUPS & RADAR MINIMAP
+  // ==========================================================================
+
+  triggerDamageEffects() {
+    this.screenShake = 0.35;
+    if (this.damageFlashOverlay) {
+      this.damageFlashOverlay.classList.remove('flash-active');
+      void this.damageFlashOverlay.offsetWidth;
+      this.damageFlashOverlay.classList.add('flash-active');
+      setTimeout(() => {
+        if (this.damageFlashOverlay) {
+          this.damageFlashOverlay.classList.remove('flash-active');
+        }
+      }, 250);
+    }
+  }
+
+  showRoomPopup(roomName) {
+    if (!this.roomPopup || !this.roomPopupName) return;
+    this.roomPopupName.textContent = `ENTERED: ${roomName.toUpperCase()}`;
+    this.roomPopup.classList.remove('hidden');
+    this.roomPopup.classList.remove('fade-out');
+
+    if (this.roomPopupTimer) clearTimeout(this.roomPopupTimer);
+    this.roomPopupTimer = setTimeout(() => {
+      if (this.roomPopup) {
+        this.roomPopup.classList.add('fade-out');
+        setTimeout(() => {
+          if (this.roomPopup) this.roomPopup.classList.add('hidden');
+        }, 300);
+      }
+    }, 1800);
+  }
+
+  addStoryLog(text, type = 'info') {
+    const mins = Math.floor(this.timeRemaining / 60);
+    const secs = Math.floor(this.timeRemaining % 60);
+    const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+    this.storyLogs.unshift({ time: timeStr, text, type });
+    if (this.storyLogs.length > 25) {
+      this.storyLogs.pop();
+    }
+    this.renderStoryLogs();
+  }
+
+  renderStoryLogs() {
+    if (!this.storyLogContainer) return;
+    if (this.storyLogs.length === 0) {
+      this.storyLogContainer.innerHTML = '<div class="log-empty-msg">Waiting for campus activity...</div>';
+      return;
+    }
+
+    let html = '';
+    this.storyLogs.slice(0, 16).forEach(log => {
+      html += `<div class="story-log-entry log-${log.type}">
+        <span class="log-time">[${log.time}]</span>
+        <span class="log-msg">${log.text}</span>
+      </div>`;
+    });
+    this.storyLogContainer.innerHTML = html;
+
+    if (this.bestScoreDisplay) {
+      this.bestScoreDisplay.textContent = this.sessionHighScore;
+    }
+  }
+
+  // Draw beacon guide arrow orbiting around player pointing to nearest key or exit gate
+  drawGuideArrow(ctx, time) {
+    let targetX = null;
+    let targetY = null;
+    let isExit = false;
+
+    if (this.keysCollected < 3) {
+      let minDist = Infinity;
+      this.keys.forEach(k => {
+        if (!k.collected) {
+          const kx = k.x + k.width / 2;
+          const ky = k.y + k.height / 2;
+          const dist = Math.hypot(kx - this.player.x, ky - this.player.y);
+          if (dist < minDist) {
+            minDist = dist;
+            targetX = kx;
+            targetY = ky;
+          }
+        }
+      });
+    } else {
+      targetX = 23.5 * TILE_SIZE;
+      targetY = 8.5 * TILE_SIZE;
+      isExit = true;
+    }
+
+    if (targetX === null) return;
+
+    const px = this.player.x + this.player.width / 2;
+    const py = this.player.y + this.player.height / 2;
+    const angle = Math.atan2(targetY - py, targetX - px);
+
+    const orbitRadius = 44 + Math.sin(time * 0.009) * 4;
+    const arrowX = px + Math.cos(angle) * orbitRadius;
+    const arrowY = py + Math.sin(angle) * orbitRadius;
+
+    ctx.save();
+    ctx.translate(arrowX, arrowY);
+    ctx.rotate(angle);
+
+    const color = isExit ? '#10b981' : '#facc15';
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
+
+    // Sharp glowing cyber chevron arrow
+    ctx.beginPath();
+    ctx.moveTo(9, 0);
+    ctx.lineTo(-7, -6);
+    ctx.lineTo(-3, 0);
+    ctx.lineTo(-7, 6);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Draw Corner Radar Minimap with real-time player, keys, enemies, and exit
+  drawMinimap(ctx, time) {
+    const mmW = 124;
+    const mmH = 92;
+    const mmX = this.canvas.width - mmW - 12;
+    const mmY = 12;
+
+    ctx.save();
+    // Translucent dark radar background
+    ctx.fillStyle = 'rgba(8, 12, 24, 0.85)';
+    ctx.fillRect(mmX, mmY, mmW, mmH);
+
+    // Glowing cyan radar boundary
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.65)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(mmX, mmY, mmW, mmH);
+
+    // Radar Header
+    ctx.font = "bold 6px 'Press Start 2P', monospace";
+    ctx.fillStyle = '#06b6d4';
+    ctx.textAlign = 'left';
+    ctx.fillText("RADAR", mmX + 6, mmY + 11);
+
+    // Coordinate scale
+    const scaleX = (mmW - 12) / (MAP_COLS * TILE_SIZE);
+    const scaleY = (mmH - 18) / (MAP_ROWS * TILE_SIZE);
+    const offX = mmX + 6;
+    const offY = mmY + 14;
+
+    // Room boundaries
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(offX + 1 * TILE_SIZE * scaleX, offY + 1 * TILE_SIZE * scaleY, 6 * TILE_SIZE * scaleX, 6 * TILE_SIZE * scaleY);
+    ctx.strokeRect(offX + 9 * TILE_SIZE * scaleX, offY + 1 * TILE_SIZE * scaleY, 7 * TILE_SIZE * scaleX, 6 * TILE_SIZE * scaleY);
+    ctx.strokeRect(offX + 18 * TILE_SIZE * scaleX, offY + 1 * TILE_SIZE * scaleY, 6 * TILE_SIZE * scaleX, 6 * TILE_SIZE * scaleY);
+    ctx.strokeRect(offX + 1 * TILE_SIZE * scaleX, offY + 11 * TILE_SIZE * scaleY, 8 * TILE_SIZE * scaleX, 6 * TILE_SIZE * scaleY);
+    ctx.strokeRect(offX + 12 * TILE_SIZE * scaleX, offY + 11 * TILE_SIZE * scaleY, 12 * TILE_SIZE * scaleX, 6 * TILE_SIZE * scaleY);
+
+    // Exit Gate
+    const exitDotX = offX + 23.5 * TILE_SIZE * scaleX;
+    const exitDotY = offY + 8.5 * TILE_SIZE * scaleY;
+    ctx.fillStyle = this.map.exitUnlocked ? '#10b981' : '#ef4444';
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 4;
+    ctx.fillRect(exitDotX - 3, exitDotY - 3, 6, 6);
+
+    // Keys (glowing yellow)
+    this.keys.forEach(k => {
+      if (!k.collected) {
+        const kx = offX + (k.x + k.width / 2) * scaleX;
+        const ky = offY + (k.y + k.height / 2) * scaleY;
+        ctx.fillStyle = '#facc15';
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 5;
+        ctx.beginPath();
+        ctx.arc(kx, ky, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+
+    // Enemies (pulsing red dots)
+    const enemyPulse = (Math.sin(time * 0.015) + 1) / 2 * 0.4 + 0.6;
+    ctx.fillStyle = `rgba(239, 68, 68, ${enemyPulse})`;
+    ctx.shadowColor = '#ef4444';
+    ctx.shadowBlur = 4;
+    this.enemies.forEach(e => {
+      const ex = offX + (e.x + e.width / 2) * scaleX;
+      const ey = offY + (e.y + e.height / 2) * scaleY;
+      ctx.beginPath();
+      ctx.arc(ex, ey, 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Player (pulsing bright cyan dot)
+    const px = offX + (this.player.x + this.player.width / 2) * scaleX;
+    const py = offY + (this.player.y + this.player.height / 2) * scaleY;
+    ctx.fillStyle = '#38bdf8';
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // ==========================================================================
   // LEVEL CLEAR, VICTORY, AND GAME OVER
   // ==========================================================================
 
@@ -655,6 +889,7 @@ class EscapeGame {
     const timeBonus = Math.floor(this.timeRemaining) * 25;
     this.score += 500 + timeBonus;
     this.sessionHighScore = Math.max(this.sessionHighScore, this.score);
+    this.addStoryLog(`Semester ${this.level} Cleared! (+${500 + timeBonus} PTS)`, 'success');
 
     if (this.levelClearTitle) {
       this.levelClearTitle.textContent = `SEMESTER ${this.level} COMPLETED!`;
@@ -678,6 +913,7 @@ class EscapeGame {
     const timeBonus = Math.floor(this.timeRemaining) * 30;
     this.score += 1500 + timeBonus;
     this.sessionHighScore = Math.max(this.sessionHighScore, this.score);
+    this.addStoryLog(`College Escaped! Degree Awarded! 🎓`, 'success');
 
     const mins = Math.floor(this.timeRemaining / 60);
     const secs = Math.floor(this.timeRemaining % 60);
@@ -694,6 +930,7 @@ class EscapeGame {
     if (window.soundManager) window.soundManager.playGameOver();
 
     this.sessionHighScore = Math.max(this.sessionHighScore, this.score);
+    this.addStoryLog(`Game Over: ${reason}`, 'damage');
 
     this.gameOverReason.textContent = reason;
     this.gameOverScore.textContent = this.score;
@@ -729,6 +966,12 @@ class EscapeGame {
       return;
     }
 
+    // Screen Shake tick
+    if (this.screenShake > 0) {
+      this.screenShake -= dt;
+      if (this.screenShake < 0) this.screenShake = 0;
+    }
+
     // 2. Score increments for survival
     this.scoreTimer += dt;
     if (this.scoreTimer >= 1.0) {
@@ -739,6 +982,19 @@ class EscapeGame {
     // 3. Update Player
     this.player.update(dt, this.input, this.map);
 
+    // Check Room Entry Transition
+    const currentRoomName = this.map.getRoomAt(this.player.x + this.player.width / 2, this.player.y + this.player.height / 2);
+    if (currentRoomName && currentRoomName !== this.currentRoom) {
+      this.currentRoom = currentRoomName;
+      this.showRoomPopup(currentRoomName);
+      this.addStoryLog(`Entered ${currentRoomName}`, 'room');
+    }
+
+    // Update Particle System
+    if (window.particleSystem) {
+      window.particleSystem.update(dt);
+    }
+
     // 4. Update Enemies & Check Collisions
     this.enemies.forEach(enemy => {
       enemy.update(dt, this.map);
@@ -746,6 +1002,8 @@ class EscapeGame {
       if (this.checkEntityCollision(this.player, enemy)) {
         const tookDamage = this.player.takeDamage(enemy.damage);
         if (tookDamage) {
+          this.triggerDamageEffects();
+          this.addStoryLog(`Hit by ${enemy.name || 'Assignment'} (-${Math.round(enemy.damage)} HP)`, 'damage');
           if (this.player.health <= 0) {
             this.updateHUD();
             this.triggerGameOver("Academic Burnout! Overwhelmed by strict professors & deadlines!");
@@ -763,16 +1021,18 @@ class EscapeGame {
         key.collected = true;
         this.keysCollected++;
         this.score += 300;
-        this.player.addFloatingText(`+${key.name.toUpperCase()}!`, '#fbbf24');
+        this.player.addFloatingText(`Key found! 🔑`, '#fbbf24');
+        if (window.particleSystem) {
+          window.particleSystem.addBurst(key.x + 12, key.y + 12, '#fbbf24', 18);
+        }
+        this.addStoryLog(`Found ${key.name}! (+300 PTS)`, 'key');
         if (window.soundManager) window.soundManager.playKey();
 
         if (this.keysCollected >= 3) {
           this.map.unlockExit();
           this.statusBanner.classList.add('alert-open');
-          this.statusMessage.textContent = "⚡ ALL 3 KEYS COLLECTED! The Main College Exit Gate is UNLOCKED! Run to freedom!";
+          this.addStoryLog(`⚡ EXIT UNLOCKED! Run to the gate!`, 'gate');
           if (window.soundManager) window.soundManager.playGateUnlocked();
-        } else {
-          this.statusMessage.textContent = `Keys Found: ${this.keysCollected} / 3. Find the remaining department keys!`;
         }
       }
     });
@@ -783,6 +1043,10 @@ class EscapeGame {
         coffee.collected = true;
         this.player.heal(25);
         this.score += 150;
+        if (window.particleSystem) {
+          window.particleSystem.addBurst(coffee.x + 12, coffee.y + 12, '#10b981', 14);
+        }
+        this.addStoryLog(`Sipped Hot Coffee (+25 HP, +150 PTS)`, 'coffee');
       }
     });
 
@@ -792,6 +1056,10 @@ class EscapeGame {
         shield.collected = true;
         this.player.activateShield();
         this.score += 200;
+        if (window.particleSystem) {
+          window.particleSystem.addBurst(shield.x + 12, shield.y + 12, '#38bdf8', 16);
+        }
+        this.addStoryLog(`Equipped Attendance Shield! 🛡️`, 'shield');
       }
     });
 
@@ -801,6 +1069,10 @@ class EscapeGame {
         proxy.collected = true;
         this.player.activateProxy(3.0);
         this.score += 250;
+        if (window.particleSystem) {
+          window.particleSystem.addBurst(proxy.x + 12, proxy.y + 12, '#c084fc', 16);
+        }
+        this.addStoryLog(`Activated Proxy Attendance! 👻 (3s)`, 'proxy');
       }
     });
 
@@ -851,6 +1123,14 @@ class EscapeGame {
       }
     });
 
+    // Dynamic Mission Line
+    const remainingKeys = 3 - this.keysCollected;
+    if (remainingKeys > 0) {
+      this.statusMessage.textContent = `Mission: Find ${remainingKeys} more ${remainingKeys === 1 ? 'key' : 'keys'} to unlock the Exit Gate!`;
+    } else {
+      this.statusMessage.textContent = `⚡ ALL 3 KEYS COLLECTED! The Exit Gate is open! Run to freedom! 🚪⚡`;
+    }
+
     // Power-Up Pills
     if (this.powerupShieldPill) {
       if (this.player.hasShield) {
@@ -869,15 +1149,20 @@ class EscapeGame {
       }
     }
 
-    // Timer display
+    // Timer display & urgent shake in last 15 seconds
     const mins = Math.floor(this.timeRemaining / 60);
     const secs = Math.floor(this.timeRemaining % 60);
     this.timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
-    if (this.timeRemaining <= 20) {
+    if (this.timeRemaining <= 15) {
       this.timerDisplay.classList.add('danger');
+      this.timerDisplay.classList.add('urgent-shake');
+    } else if (this.timeRemaining <= 20) {
+      this.timerDisplay.classList.add('danger');
+      this.timerDisplay.classList.remove('urgent-shake');
     } else {
       this.timerDisplay.classList.remove('danger');
+      this.timerDisplay.classList.remove('urgent-shake');
     }
 
     // Score display
@@ -886,6 +1171,16 @@ class EscapeGame {
 
   render(time) {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    let shaking = false;
+    if (this.screenShake > 0) {
+      shaking = true;
+      const mag = Math.min(8, this.screenShake * 20);
+      const sx = (Math.random() - 0.5) * mag;
+      const sy = (Math.random() - 0.5) * mag;
+      this.ctx.save();
+      this.ctx.translate(sx, sy);
+    }
 
     // 1. Draw Map & Floors
     this.map.draw(this.ctx, time, this.player);
@@ -899,8 +1194,27 @@ class EscapeGame {
     // 3. Draw Enemies
     this.enemies.forEach(e => e.draw(this.ctx, time));
 
-    // 4. Draw Player
+    // 4. Draw Player & Trail & Floating Texts
     this.player.draw(this.ctx, time);
+
+    // 5. Draw Particle Bursts
+    if (window.particleSystem) {
+      window.particleSystem.draw(this.ctx);
+    }
+
+    // 6. Draw Beacon Guide Arrow
+    if (this.state === STATE_PLAYING) {
+      this.drawGuideArrow(this.ctx, time);
+    }
+
+    if (shaking) {
+      this.ctx.restore();
+    }
+
+    // 7. Draw Radar Minimap (corner overlay, on top of shake)
+    if (this.state === STATE_PLAYING) {
+      this.drawMinimap(this.ctx, time);
+    }
   }
 }
 

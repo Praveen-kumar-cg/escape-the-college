@@ -1,7 +1,12 @@
 /**
- * map.js - Procedural College Map Generator & Dynamic Lighting
- * Grid: 25 columns x 18 rows of 32x32 pixel tiles (800 x 576 canvas)
- * Randomizes room layouts, doors, obstacles, and navigation paths on every try!
+ * map.js - Procedural College Map Generator, Themed Rooms & Flashlight Engine
+ * Distinct themes:
+ * - 📚 Library: Warm mahogany wood planks & colorful bookshelves
+ * - 💻 Computer Lab: Deep cyber-slate tiles & flickering glowing terminal screens
+ * - ☕ Faculty Lounge: Royal purple velvet carpet & coffee bar counters
+ * - 🛋️ Study Hall: Amber study flooring & lamp-lit study desks
+ * - 🎓 Lecture Hall: Tiered navy auditorium tiles & lecture benches
+ * - Main Hallway: Checkered marble tiles with glowing overhead neon light strips
  */
 
 const TILE_SIZE = 32;
@@ -11,7 +16,7 @@ const MAP_ROWS = 18;
 // Tile Types
 const TILE_HALLWAY = 0;
 const TILE_WALL = 1;
-const TILE_OBSTACLE = 2; // Desk / Bookshelf
+const TILE_OBSTACLE = 2; // Desk / Bookshelf / Terminal
 const TILE_EXIT = 3;     // Main Campus Exit Gate
 const TILE_ROOM = 4;     // Room Floor
 
@@ -23,11 +28,11 @@ class CollegeMap {
     this.level = 1;
     this.doors = [];
     this.rooms = {
-      library: { name: "📚 LIBRARY", minCol: 1, maxCol: 6, minRow: 1, maxRow: 6, labelX: 3.5, labelY: 1.5 },
-      computerLab: { name: "💻 COMPUTER LAB", minCol: 9, maxCol: 15, minRow: 1, maxRow: 6, labelX: 12, labelY: 1.5 },
-      facultyLounge: { name: "☕ FACULTY LOUNGE", minCol: 18, maxCol: 23, minRow: 1, maxRow: 6, labelX: 20.5, labelY: 1.5 },
-      studyHall: { name: "🛋️ STUDY HALL", minCol: 1, maxCol: 8, minRow: 11, maxRow: 16, labelX: 4.5, labelY: 11.5 },
-      lectureHall: { name: "🎓 LECTURE HALL", minCol: 12, maxCol: 23, minRow: 11, maxRow: 16, labelX: 17.5, labelY: 11.5 }
+      library: { name: "📚 LIBRARY", minCol: 1, maxCol: 6, minRow: 1, maxRow: 6, labelX: 3.5, labelY: 1.5, theme: 'library' },
+      computerLab: { name: "💻 COMPUTER LAB", minCol: 9, maxCol: 15, minRow: 1, maxRow: 6, labelX: 12, labelY: 1.5, theme: 'lab' },
+      facultyLounge: { name: "☕ FACULTY LOUNGE", minCol: 18, maxCol: 23, minRow: 1, maxRow: 6, labelX: 20.5, labelY: 1.5, theme: 'lounge' },
+      studyHall: { name: "🛋️ STUDY HALL", minCol: 1, maxCol: 8, minRow: 11, maxRow: 16, labelX: 4.5, labelY: 11.5, theme: 'study' },
+      lectureHall: { name: "🎓 LECTURE HALL", minCol: 12, maxCol: 23, minRow: 11, maxRow: 16, labelX: 17.5, labelY: 11.5, theme: 'lecture' }
     };
     this.generate(1);
   }
@@ -38,6 +43,40 @@ class CollegeMap {
 
   unlockExit() {
     this.exitUnlocked = true;
+  }
+
+  // Get the room name at a given pixel position
+  getRoomAt(x, y) {
+    const col = Math.floor(x / TILE_SIZE);
+    const row = Math.floor(y / TILE_SIZE);
+
+    if (row >= 1 && row <= 6) {
+      if (col >= 1 && col <= 6) return "📚 Library";
+      if (col >= 9 && col <= 15) return "💻 Computer Lab";
+      if (col >= 18 && col <= 23) return "☕ Faculty Lounge";
+    }
+    if (row >= 11 && row <= 16) {
+      if (col >= 1 && col <= 8) return "🛋️ Study Hall";
+      if (col >= 12 && col <= 23) return "🎓 Lecture Hall";
+    }
+    if (row >= 8 && row <= 9) {
+      return "Main Hallway";
+    }
+    return "Campus Corridor";
+  }
+
+  // Get theme string for a given tile coordinate
+  getTileTheme(col, row) {
+    if (row >= 1 && row <= 6) {
+      if (col >= 1 && col <= 6) return 'library';
+      if (col >= 9 && col <= 15) return 'lab';
+      if (col >= 18 && col <= 23) return 'lounge';
+    }
+    if (row >= 11 && row <= 16) {
+      if (col >= 1 && col <= 8) return 'study';
+      if (col >= 12 && col <= 23) return 'lecture';
+    }
+    return 'hallway';
   }
 
   // ==========================================================================
@@ -83,34 +122,28 @@ class CollegeMap {
     });
 
     // 2. Dynamic Doorway Placement (Randomized on each try)
-    // Library door to main hallway or side corridor
     const libDoorC = this.randomChoice([2, 3, 4, 5]);
     this.grid[7][libDoorC] = TILE_HALLWAY;
     this.doors.push({ col: libDoorC, row: 7 });
 
-    // Optional side door to vertical corridor
     if (Math.random() < 0.6) {
       const libSideR = this.randomChoice([3, 4, 5]);
       this.grid[libSideR][6] = TILE_HALLWAY;
       this.doors.push({ col: 6, row: libSideR });
     }
 
-    // Computer Lab door to main hallway
     const labDoorC = this.randomChoice([10, 12, 14]);
     this.grid[7][labDoorC] = TILE_HALLWAY;
     this.doors.push({ col: labDoorC, row: 7 });
 
-    // Faculty Lounge door to main hallway
     const loungeDoorC = this.randomChoice([19, 20, 22]);
     this.grid[7][loungeDoorC] = TILE_HALLWAY;
     this.doors.push({ col: loungeDoorC, row: 7 });
 
-    // Study Hall door to main hallway
     const studyDoorC = this.randomChoice([3, 4, 6, 7]);
     this.grid[10][studyDoorC] = TILE_HALLWAY;
     this.doors.push({ col: studyDoorC, row: 10 });
 
-    // Lecture Hall door to main hallway
     const lectureDoorC1 = this.randomChoice([13, 14, 15]);
     const lectureDoorC2 = this.randomChoice([18, 20, 22]);
     this.grid[10][lectureDoorC1] = TILE_HALLWAY;
@@ -123,7 +156,6 @@ class CollegeMap {
 
     // 4. Dynamic Hallway Obstacles based on Level
     if (level >= 2) {
-      // Add a couple of dynamic fallen desks / barricades with a clear bypass
       const barCol = this.randomChoice([5, 13, 15]);
       this.grid[8][barCol] = TILE_OBSTACLE;
     }
@@ -141,98 +173,82 @@ class CollegeMap {
     this.ensureReachability();
   }
 
-  // Generate varied room layouts by selecting different architectural templates
   generateRoomObstacles() {
-    // --- A. LIBRARY ---
+    // A. LIBRARY: Vertical Bookshelves with center aisle
     const libStyle = Math.floor(Math.random() * 3);
     if (libStyle === 0) {
-      // Vertical Book Stacks with center aisle
       [2, 4].forEach(c => {
         [2, 3, 5].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
       });
     } else if (libStyle === 1) {
-      // Reading Carrels Pods
       [[2, 2], [2, 3], [5, 2], [5, 3], [3, 5], [4, 5]].forEach(([c, r]) => {
         this.grid[r][c] = TILE_OBSTACLE;
       });
     } else {
-      // Zig-zag Stacks
       [2, 3, 4].forEach(c => { this.grid[2][c] = TILE_OBSTACLE; });
       [3, 4, 5].forEach(c => { this.grid[4][c] = TILE_OBSTACLE; });
     }
 
-    // --- B. COMPUTER LAB ---
+    // B. COMPUTER LAB: Workstations with flickering monitors
     const labStyle = Math.floor(Math.random() * 3);
     if (labStyle === 0) {
-      // Paired Workstation Rows
       [10, 11, 13, 14].forEach(c => {
         [2, 4].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
       });
     } else if (labStyle === 1) {
-      // Central Server Block with side desks
       [12, 13].forEach(c => {
         [2, 3, 4].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
       });
       [10, 15].forEach(c => { this.grid[2][c] = TILE_OBSTACLE; this.grid[5][c] = TILE_OBSTACLE; });
     } else {
-      // Staggered Pods
       [[10, 2], [11, 2], [13, 3], [14, 3], [10, 5], [11, 5]].forEach(([c, r]) => {
         this.grid[r][c] = TILE_OBSTACLE;
       });
     }
 
-    // --- C. FACULTY LOUNGE ---
+    // C. FACULTY LOUNGE: Coffee Bar & Conference Tables
     const loungeStyle = Math.floor(Math.random() * 3);
     if (loungeStyle === 0) {
-      // Coffee counter + Conference Table
       [18, 19].forEach(c => { this.grid[2][c] = TILE_OBSTACLE; });
       [21, 22].forEach(c => { this.grid[4][c] = TILE_OBSTACLE; });
     } else if (loungeStyle === 1) {
-      // Perimeter Sofas
       [18, 22].forEach(c => {
         [2, 3, 4].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
       });
     } else {
-      // Executive Desks
       [[19, 2], [20, 2], [19, 4], [20, 4], [22, 3]].forEach(([c, r]) => {
         this.grid[r][c] = TILE_OBSTACLE;
       });
     }
 
-    // --- D. STUDY HALL ---
+    // D. STUDY HALL: Study Desks & Lamps
     const studyStyle = Math.floor(Math.random() * 3);
     if (studyStyle === 0) {
-      // Dual study blocks
       [2, 3, 6, 7].forEach(c => {
         [12, 15].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
       });
     } else if (studyStyle === 1) {
-      // Center discussion table
       [3, 4, 5, 6].forEach(c => {
         [13, 14].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
       });
     } else {
-      // Perimeter cubicles
       [2, 7].forEach(c => {
         [12, 13, 14, 15].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
       });
     }
 
-    // --- E. LECTURE HALL ---
+    // E. LECTURE HALL: Tiered Auditorium Rows
     const lectureStyle = Math.floor(Math.random() * 3);
     if (lectureStyle === 0) {
-      // Center aisle auditorium rows
       [13, 14, 15, 17, 18, 19].forEach(c => {
         [12, 14].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
       });
       [21, 22].forEach(c => { this.grid[13][c] = TILE_OBSTACLE; });
     } else if (lectureStyle === 1) {
-      // Dual aisle rows
       [14, 15, 16, 19, 20, 21].forEach(c => {
         [12, 14, 16].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
       });
     } else {
-      // Horseshoe seminar seating
       [14, 15, 16, 17, 18, 19, 20].forEach(c => { this.grid[15][c] = TILE_OBSTACLE; });
       [14, 20].forEach(c => {
         [12, 13, 14].forEach(r => { this.grid[r][c] = TILE_OBSTACLE; });
@@ -240,7 +256,6 @@ class CollegeMap {
     }
   }
 
-  // BFS Reachability check: ensures student at hallway/spawn can reach all rooms and the exit
   ensureReachability() {
     const startC = 3;
     const startR = 13;
@@ -265,10 +280,8 @@ class CollegeMap {
       }
     }
 
-    // Verify exit is reachable
     const exitReachable = this.exitTiles.some(t => visited[t.row][t.col]);
     if (!exitReachable) {
-      // Carve direct opening to exit
       this.grid[8][22] = TILE_HALLWAY;
       this.grid[9][22] = TILE_HALLWAY;
     }
@@ -278,7 +291,6 @@ class CollegeMap {
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  // Get all walkable room/hallway floor tiles inside a bounding box
   getWalkableTilesInArea(minCol, maxCol, minRow, maxRow) {
     const list = [];
     for (let r = minRow; r <= maxRow; r++) {
@@ -291,23 +303,20 @@ class CollegeMap {
     return list;
   }
 
-  // Check if tile is solid (blocks movement)
   isTileSolid(col, row) {
     if (col < 0 || col >= MAP_COLS || row < 0 || row >= MAP_ROWS) {
-      return true; // Outside bounds is solid
+      return true;
     }
     const tile = this.grid[row][col];
     if (tile === TILE_WALL || tile === TILE_OBSTACLE) {
       return true;
     }
-    // Exit gate blocks passage until unlocked
     if (tile === TILE_EXIT && !this.exitUnlocked) {
       return true;
     }
     return false;
   }
 
-  // Check if a bounding box collides with solid tiles
   checkCollision(x, y, width, height) {
     const minCol = Math.floor(x / TILE_SIZE);
     const maxCol = Math.floor((x + width - 1) / TILE_SIZE);
@@ -324,7 +333,6 @@ class CollegeMap {
     return false;
   }
 
-  // Check if bounding box touches the Exit Gate
   isAtExit(x, y, width, height) {
     const minCol = Math.floor(x / TILE_SIZE);
     const maxCol = Math.floor((x + width - 1) / TILE_SIZE);
@@ -344,7 +352,7 @@ class CollegeMap {
   }
 
   // ==========================================================================
-  // RENDERING & SPOOKY LIGHTING (Projector & Mobile Ready)
+  // RENDERING: DISTINCT ROOM THEMES, LIGHT STRIPS & ANIMATED EXIT
   // ==========================================================================
   draw(ctx, time, player = null) {
     for (let r = 0; r < MAP_ROWS; r++) {
@@ -352,64 +360,171 @@ class CollegeMap {
         const x = c * TILE_SIZE;
         const y = r * TILE_SIZE;
         const tile = this.grid[r][c];
+        const theme = this.getTileTheme(c, r);
 
         if (tile === TILE_WALL) {
-          // Dark campus brick wall
-          ctx.fillStyle = '#0f172a';
+          // Dark campus brick wall with 3D top bevel
+          ctx.fillStyle = '#0a0f1d';
           ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
           // Wall top highlight
           ctx.fillStyle = '#1e293b';
-          ctx.fillRect(x, y, TILE_SIZE, 4);
+          ctx.fillRect(x, y, TILE_SIZE, 3);
 
-          // Subtle brick lines
-          ctx.strokeStyle = '#090d16';
+          // Brick pattern borders
+          ctx.strokeStyle = '#040711';
           ctx.lineWidth = 1;
           ctx.strokeRect(x + 0.5, y + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
 
         } else if (tile === TILE_ROOM) {
-          // Wooden/linoleum room floor
-          ctx.fillStyle = (r + c) % 2 === 0 ? '#141e33' : '#121a2d';
-          ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+          // --- THEMED FLOORS PER ROOM ---
+          if (theme === 'library') {
+            // Warm Mahogany Wood Planks
+            ctx.fillStyle = (r + c) % 2 === 0 ? '#2a170c' : '#221208';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            // Wood plank seams
+            ctx.strokeStyle = 'rgba(74, 40, 21, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
 
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+          } else if (theme === 'lab') {
+            // Computer Lab: Deep Cyber-Slate & Neon Grid Lines
+            ctx.fillStyle = (r + c) % 2 === 0 ? '#051829' : '#041321';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            // Neon cyan circuitry border
+            ctx.strokeStyle = 'rgba(6, 182, 212, 0.12)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+
+          } else if (theme === 'lounge') {
+            // Faculty Lounge: Royal Velvet Purple Carpet
+            ctx.fillStyle = (r + c) % 2 === 0 ? '#260f38' : '#1e092d';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            // Gold/violet carpet weave
+            ctx.strokeStyle = 'rgba(192, 132, 252, 0.08)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+
+          } else if (theme === 'study') {
+            // Study Hall: Cozy Amber Wood Linoleum
+            ctx.fillStyle = (r + c) % 2 === 0 ? '#1d152a' : '#171022';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.06)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+
+          } else if (theme === 'lecture') {
+            // Lecture Hall: Tiered Navy Auditorium Linoleum
+            ctx.fillStyle = (r + c) % 2 === 0 ? '#0a1930' : '#071326';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+          }
 
         } else if (tile === TILE_HALLWAY) {
-          // Slate stone hallway floor
-          ctx.fillStyle = (r + c) % 2 === 0 ? '#0b1120' : '#090e1a';
+          // Main Hallway: Alternating Checkered Marble Tiles
+          const isCheckered = (r + c) % 2 === 0;
+          ctx.fillStyle = isCheckered ? '#0e172a' : '#080d19';
           ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-          ctx.strokeStyle = 'rgba(6, 182, 212, 0.04)';
+          ctx.strokeStyle = 'rgba(6, 182, 212, 0.06)';
           ctx.lineWidth = 1;
           ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
 
+          // Overhead neon cyan ceiling strip down central hallway
+          if (r === 8 && c >= 1 && c <= 22) {
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.18)';
+            ctx.fillRect(x, y + 30, TILE_SIZE, 2);
+          }
+
         } else if (tile === TILE_OBSTACLE) {
-          // Room floor base
-          ctx.fillStyle = '#141e33';
-          ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-
-          // Desk / Bookcase block
-          ctx.fillStyle = '#334155';
-          ctx.fillRect(x + 2, y + 4, TILE_SIZE - 4, TILE_SIZE - 8);
-
-          // Desk top surface
-          ctx.fillStyle = '#475569';
-          ctx.fillRect(x + 3, y + 4, TILE_SIZE - 6, 6);
-
-          // Computer / Book detail
-          ctx.fillStyle = (r * 7 + c * 3) % 2 === 0 ? '#06b6d4' : '#f59e0b';
-          ctx.fillRect(x + 10, y + 12, 12, 8);
-
-        } else if (tile === TILE_EXIT) {
-          // Exit Gate Area
-          if (!this.exitUnlocked) {
-            // Locked Gate (Red barrier and iron bars)
-            ctx.fillStyle = '#2d0a0a';
+          // --- THEMED OBSTACLES PER ROOM ---
+          if (theme === 'library') {
+            // Bookshelf with colorful pixel books
+            ctx.fillStyle = '#221208';
             ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-            // Metal bars
+            // Mahogany Bookcase frame
+            ctx.fillStyle = '#3a2012';
+            ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+
+            // Shelf dividers & colorful books
+            const colors = ['#dc2626', '#2563eb', '#059669', '#eab308', '#9333ea'];
+            for (let b = 0; b < 4; b++) {
+              ctx.fillStyle = colors[(c * 3 + b + r) % colors.length];
+              ctx.fillRect(x + 4 + b * 6, y + 5, 5, 20);
+              // Gold rib on book
+              ctx.fillStyle = '#fef08a';
+              ctx.fillRect(x + 4 + b * 6, y + 9, 5, 2);
+            }
+
+          } else if (theme === 'lab') {
+            // Computer Terminal with flickering monitor
+            ctx.fillStyle = '#051829';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+            // Dark desk
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(x + 2, y + 4, TILE_SIZE - 4, TILE_SIZE - 8);
+
+            // Glowing Monitor Screen with subtle flicker
+            const screenFlicker = Math.sin(time * 0.02 + c) > 0.3 ? 0.9 : 0.7;
+            ctx.fillStyle = `rgba(6, 182, 212, ${screenFlicker})`;
+            ctx.fillRect(x + 7, y + 7, 18, 12);
+
+            // Code scanlines on screen
+            ctx.fillStyle = '#083344';
+            ctx.fillRect(x + 9, y + 10, 14, 2);
+            ctx.fillRect(x + 9, y + 14, 10, 2);
+
+            // Green power LED
+            ctx.fillStyle = '#10b981';
+            ctx.fillRect(x + 22, y + 21, 2, 2);
+
+          } else if (theme === 'lounge') {
+            // Faculty Lounge Table & Steaming Mug
+            ctx.fillStyle = '#260f38';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+            ctx.fillStyle = '#4c1d95';
+            ctx.fillRect(x + 3, y + 5, TILE_SIZE - 6, TILE_SIZE - 10);
+
+            // Tablecloth & Mug
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(x + 11, y + 10, 10, 8);
+
+          } else if (theme === 'study') {
+            // Study Desk & Lamp
+            ctx.fillStyle = '#1d152a';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(x + 2, y + 5, TILE_SIZE - 4, TILE_SIZE - 10);
+
+            // Lamp light pool
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(x + 12, y + 11, 8, 8);
+
+          } else {
+            // Default Hallway / Lecture Auditorium Bench
+            ctx.fillStyle = '#0a1930';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(x + 2, y + 4, TILE_SIZE - 4, TILE_SIZE - 8);
+
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(x + 8, y + 10, 16, 6);
+          }
+
+        } else if (tile === TILE_EXIT) {
+          // --- EXIT GATE: ANIMATED PORTAL ---
+          if (!this.exitUnlocked) {
+            // Locked Gate (Crimson Barrier & Iron Bars)
+            ctx.fillStyle = '#2b0707';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
             ctx.strokeStyle = '#ef4444';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -418,65 +533,88 @@ class CollegeMap {
             ctx.moveTo(x + 26, y); ctx.lineTo(x + 26, y + TILE_SIZE);
             ctx.stroke();
 
-            // Red warning glow
-            ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
             ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-            // Padlock icon
             if (r === 8 && c === 23) {
               ctx.font = '16px sans-serif';
               ctx.textAlign = 'center';
               ctx.fillText('🔒', x + 16, y + 22);
             }
           } else {
-            // Unlocked Gate: Vibrant emerald freedom portal
-            const pulse = Math.sin(time * 0.006) * 0.2 + 0.8;
+            // Unlocked Gate: Glowing Animated Emerald Freedom Portal!
+            const pulse = Math.sin(time * 0.007) * 0.25 + 0.75;
             ctx.fillStyle = `rgba(16, 185, 129, ${0.45 * pulse})`;
             ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-            // Glowing green exit archway
+            // Pulsing Neon Emerald Archway
             ctx.strokeStyle = '#10b981';
             ctx.lineWidth = 3;
+            ctx.shadowColor = '#10b981';
+            ctx.shadowBlur = 12;
             ctx.strokeRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+            ctx.shadowBlur = 0;
+
+            // Animated Energy Particles across portal
+            const beamX = x + ((time * 0.05) % TILE_SIZE);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillRect(beamX, y + 4, 3, TILE_SIZE - 8);
 
             if (r === 8 && c === 23) {
-              ctx.font = 'bold 10px monospace';
+              ctx.font = 'bold 9px monospace';
               ctx.fillStyle = '#6ee7b7';
               ctx.textAlign = 'center';
-              ctx.fillText('EXIT', x + 16, y + 20);
+              ctx.fillText('ESCAPE!', x + 16, y + 20);
             }
           }
         }
       }
     }
 
-    // Render Room Header Labels
-    ctx.font = 'bold 9px sans-serif';
+    // Render Large & Bright Room Header Labels
+    ctx.save();
+    ctx.font = "bold 9px 'Press Start 2P', monospace";
     ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
+    ctx.shadowBlur = 8;
     Object.values(this.rooms).forEach(rm => {
+      ctx.shadowColor = rm.theme === 'lab' ? '#06b6d4' : rm.theme === 'library' ? '#f59e0b' : '#c084fc';
+      ctx.fillStyle = '#f8fafc';
       ctx.fillText(rm.name, rm.labelX * TILE_SIZE, rm.labelY * TILE_SIZE);
     });
-    ctx.fillText('MAIN HALLWAY', 12.5 * TILE_SIZE, 8.8 * TILE_SIZE);
+    ctx.shadowColor = '#06b6d4';
+    ctx.fillStyle = '#67e8f9';
+    ctx.fillText('⚡ MAIN HALLWAY ⚡', 12.5 * TILE_SIZE, 8.8 * TILE_SIZE);
+    ctx.restore();
 
-    // Dynamic Spooky Atmosphere Lighting on Levels 2 & 3
-    if (this.level >= 2 && player) {
-      this.drawSpookyLighting(ctx, time, player);
+    // Flashlight & Ambient Darkness Vignette
+    if (player) {
+      this.drawFlashlight(ctx, time, player);
     }
   }
 
-  // Spooky ambient lighting: flashlight cone / darkness vignette
-  drawSpookyLighting(ctx, time, player) {
+  // Soft Radial Flashlight with Ambient Vignette
+  drawFlashlight(ctx, time, player) {
     const px = player.x + player.width / 2;
     const py = player.y + player.height / 2;
-    const flicker = Math.sin(time * 0.01) * 6;
-    const radius = this.level === 3 ? 190 + flicker : 270 + flicker;
+    const flicker = Math.sin(time * 0.012) * 5;
+
+    // Radius tuned for smooth gameplay navigation
+    let radius = 320 + flicker; // Default soft ambient vignette
+    let outerDarkness = 0.55;
+
+    if (this.level === 2) {
+      radius = 260 + flicker;
+      outerDarkness = 0.75;
+    } else if (this.level >= 3) {
+      radius = 195 + flicker;
+      outerDarkness = 0.94;
+    }
 
     ctx.save();
-    const grad = ctx.createRadialGradient(px, py, radius * 0.35, px, py, radius);
+    const grad = ctx.createRadialGradient(px, py, radius * 0.25, px, py, radius);
     grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    grad.addColorStop(0.7, this.level === 3 ? 'rgba(3, 7, 18, 0.65)' : 'rgba(3, 7, 18, 0.35)');
-    grad.addColorStop(1, this.level === 3 ? 'rgba(3, 7, 18, 0.94)' : 'rgba(3, 7, 18, 0.7)');
+    grad.addColorStop(0.65, `rgba(4, 7, 16, ${outerDarkness * 0.4})`);
+    grad.addColorStop(1, `rgba(4, 7, 16, ${outerDarkness})`);
 
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, MAP_COLS * TILE_SIZE, MAP_ROWS * TILE_SIZE);

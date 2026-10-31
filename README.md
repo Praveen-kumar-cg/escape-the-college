@@ -28,8 +28,14 @@ You fell asleep in the campus library and woke up trapped inside at midnight! To
 ## ⚡ Key Features
 
 * 🔀 **Procedural Map Generation on Every Try:** Every single run generates a **completely new layout, dynamic doorways, internal room obstacles, and randomized navigation routes**—you never play the exact same design twice!
+* 🏛️ **Themed Floors & Room Popups:** Distinct visual themes for each room—Library (warm wood & bookshelves), Computer Lab (cyan glow & flickering monitors), Faculty Lounge (royal purple carpet), Lecture Hall (collegiate cyan desks), and Main Hallway (checkered tiles with glowing neon strips)—plus instant *"Entered: [Room]"* HUD notifications.
+* 🔦 **Flashlight & Spooky Ambient Vignette:** Soft radial player flashlight cone with atmospheric darkness vignette that tightens in difficulty during Semesters 2 and 3.
+* 🧭 **Beacon Guide Arrow & Corner Radar Minimap:** Sleek cyber beacon orbiting the player pointing directly to the nearest key (or to the exit gate once unlocked) paired with a live real-time HUD Radar minimap.
+* 💥 **Hit & Pickup Effects:** Screen shake and red perimeter flash on damage, floating arcade numbers (`-20 HP`, `+150 PTS`, `Key found! 🔑`), particle bursts on collectible pickups, and ghost player motion trails.
+* 📜 **Desktop Incident Feed & Session Best:** Live event logging feed with timestamps recording every campus incident, room entry, and power-up activation, alongside your session high score.
 * 🛡️ **Attendance 75% Shield:** Collect glowing shields to absorb an enemy strike with 0 damage.
 * 👻 **Proxy Attendance (Invisibility):** Grab the proxy hall pass to become translucent and invincible to all obstacles for 3 seconds!
+* 🚪 **Animated Emerald Exit Portal:** Once all 3 keys are gathered, the exit gate animates into an active glowing green freedom portal.
 * ☕ **Hot Coffee Boosts:** Sip coffee to restore **+25 HP** and boost your score.
 * 🎵 **Procedural Spooky BGM & Web Audio:** Eerie atmospheric drone and mysterious midnight bell chimes synthesized in real-time with zero audio files to download.
 * 📱 **Flawless Phone & Projector Support:** Responsive on-screen sliding D-Pad for mobile and dedicated **⛶ Fullscreen** mode for projectors.

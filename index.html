@@ -310,11 +310,24 @@
         <span id="status-message">Objective: Search the rooms and collect all 3 keys to unlock the College Exit Gate!</span>
       </div>
 
-      <!-- Main Canvas Wrapper -->
-      <div class="canvas-wrapper">
-        <canvas id="game-canvas" width="800" height="576"></canvas>
+      <!-- Gameplay Layout Container (Canvas + Desktop Story Log) -->
+      <div class="gameplay-container">
+        <!-- Main Canvas Wrapper -->
+        <div class="canvas-wrapper">
+          <canvas id="game-canvas" width="800" height="576"></canvas>
 
-        <!-- Overlays inside Canvas Wrapper -->
+          <!-- Damage Edge Flash Overlay (Red border on hit) -->
+          <div id="damage-flash-overlay" class="damage-flash-overlay"></div>
+
+          <!-- Room Entry Popup Notification -->
+          <div id="room-entry-popup" class="room-entry-popup hidden">
+            <div class="room-popup-content">
+              <span class="room-popup-icon">📍</span>
+              <span id="room-entry-name">ENTERED: MAIN HALLWAY</span>
+            </div>
+          </div>
+
+          <!-- Overlays inside Canvas Wrapper -->
         <!-- Pause Overlay -->
         <div id="pause-overlay" class="game-modal-overlay hidden">
           <div class="modal-card">
@@ -400,7 +413,23 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> <!-- End .canvas-wrapper -->
+
+      <!-- Desktop Right-Side Panel: Incident Feed & High Score -->
+      <aside class="story-log-panel" id="desktop-story-panel" aria-label="Campus Survival Log">
+        <div class="log-panel-header">
+          <div class="log-panel-badge">INCIDENT REPORT</div>
+          <h3 class="log-panel-title">CAMPUS LOG</h3>
+          <div class="log-best-score">
+            <span class="log-best-label">BEST SCORE</span>
+            <span id="log-best-score-val" class="log-best-val">0</span>
+          </div>
+        </div>
+        <div class="log-events-container" id="story-log-container">
+          <div class="log-empty-msg">Waiting for campus activity...</div>
+        </div>
+      </aside>
+    </div> <!-- End .gameplay-container -->
 
       <!-- Bottom Touch / Keyboard Helper Bar -->
       <footer class="game-footer">
