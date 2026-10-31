@@ -1,5 +1,6 @@
 /**
- * entities.js - Game Entities: Player, Enemies, Keys, and Collectibles
+ * entities.js - Game Entities: Player, Enemies, Keys, and Power-Ups
+ * Features: Attendance Shield, Proxy Attendance (Invisibility), and Coffee Pickups.
  */
 
 // ============================================================================
@@ -12,9 +13,9 @@ class Player {
     this.reset();
   }
 
-  reset() {
-    this.x = this.startX;
-    this.y = this.startY;
+  reset(x = this.startX, y = this.startY) {
+    this.x = x;
+    this.y = y;
     this.width = 20;
     this.height = 22;
     this.speed = 150; // pixels per second
@@ -26,6 +27,10 @@ class Player {
     this.maxHealth = 100;
     this.invulnTimer = 0; // seconds of invulnerability after damage
     this.floatingTexts = []; // floating score/damage notifications
+
+    // Power-ups
+    this.hasShield = false; // Attendance Shield: absorbs 1 hit
+    this.proxyTimer = 0;    // Proxy Attendance: invisibility duration in seconds
   }
 
   // Update position with smooth separate-axis collision detection
@@ -73,6 +78,18 @@ class Player {
       if (this.invulnTimer < 0) this.invulnTimer = 0;
     }
 
+    // Tick Proxy Attendance Invisibility
+    if (this.proxyTimer > 0) {
+      const prevTimer = this.proxyTimer;
+      this.proxyTimer -= dt;
+      if (this.proxyTimer <= 0) {
+        this.proxyTimer = 0;
+        if (prevTimer > 0 && window.soundManager) {
+          window.soundManager.playProxyEnd();
+        }
+      }
+    }
+
     // Update floating texts
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const ft = this.floatingTexts[i];
@@ -86,6 +103,17 @@ class Player {
 
   takeDamage(amount) {
     if (this.invulnTimer > 0) return false;
+    // Proxy attendance active: completely invisible to damage!
+    if (this.proxyTimer > 0) return false;
+
+    // Attendance Shield active: absorb the hit completely!
+    if (this.hasShield) {
+      this.hasShield = false;
+      this.invulnTimer = 1.0;
+      this.addFloatingText('SHIELD BLOCKED HIT! 🛡️', '#38bdf8');
+      if (window.soundManager) window.soundManager.playShieldBreak();
+      return false; // No damage taken
+    }
 
     this.health -= amount;
     if (this.health < 0) this.health = 0;
@@ -102,6 +130,18 @@ class Player {
     if (window.soundManager) window.soundManager.playCoffee();
   }
 
+  activateShield() {
+    this.hasShield = true;
+    this.addFloatingText('+ATTENDANCE SHIELD! 🛡️', '#38bdf8');
+    if (window.soundManager) window.soundManager.playShield();
+  }
+
+  activateProxy(duration = 3.0) {
+    this.proxyTimer = duration;
+    this.addFloatingText('+PROXY: INVISIBLE 3s! 👻', '#c084fc');
+    if (window.soundManager) window.soundManager.playProxy();
+  }
+
   addFloatingText(text, color) {
     this.floatingTexts.push({
       text: text,
@@ -112,7 +152,7 @@ class Player {
     });
   }
 
-  // Draw cute student sprite with backpack and walk bounce
+  // Draw student sprite with backpack, walk bounce, shield, and proxy invisibility
   draw(ctx, time) {
     // If invulnerable, blink
     if (this.invulnTimer > 0 && Math.floor(time / 80) % 2 === 0) {
@@ -125,7 +165,14 @@ class Player {
 
     ctx.save();
 
-    // Subtle drop shadow under player
+    // Proxy Attendance Invisibility effect: Ghostly purple aura and translucency
+    if (this.proxyTimer > 0) {
+      ctx.globalAlpha = 0.45;
+      ctx.shadowColor = '#c084fc';
+      ctx.shadowBlur = 14;
+    }
+
+    // Drop shadow under player
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.beginPath();
     ctx.ellipse(px + this.width / 2, py + this.height + 1, 9, 4, 0, 0, Math.PI * 2);
@@ -160,7 +207,7 @@ class Player {
       ctx.fillRect(px + 5, py + 4, 2, 2);
     } else if (this.direction === 'right') {
       ctx.fillRect(px + 13, py + 4, 2, 2);
-    } // 'up' shows back of head
+    }
 
     // Legs
     ctx.fillStyle = '#334155'; // Dark jeans
@@ -174,6 +221,28 @@ class Player {
     ctx.fillRect(px + 12, py + 21 - legOffset, 5, 2);
 
     ctx.restore();
+
+    // Attendance Shield Bubble Aura
+    if (this.hasShield) {
+      ctx.save();
+      const pulse = Math.sin(time * 0.008) * 2;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(px + this.width / 2, py + this.height / 2, 16 + pulse, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Shield orbit icon
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      const orbitAngle = time * 0.004;
+      const ox = px + this.width / 2 + Math.cos(orbitAngle) * 18;
+      const oy = py + this.height / 2 + Math.sin(orbitAngle) * 18;
+      ctx.fillText('🛡️', ox, oy);
+      ctx.restore();
+    }
 
     // Draw floating notifications
     this.floatingTexts.forEach(ft => {
@@ -215,14 +284,12 @@ class KeyItem {
     const kx = this.x;
     const ky = this.y + bob;
 
-    // Glowing aura
     ctx.save();
     ctx.shadowColor = '#f59e0b';
     ctx.shadowBlur = 10;
 
-    // Key body
-    ctx.fillStyle = '#fbbf24';
     // Ring handle
+    ctx.fillStyle = '#fbbf24';
     ctx.beginPath();
     ctx.arc(kx + 7, ky + 10, 5, 0, Math.PI * 2);
     ctx.fill();
@@ -242,7 +309,92 @@ class KeyItem {
 }
 
 // ============================================================================
-// 3. COFFEE PICKUP CLASS
+// 3. POWER-UP CLASSES: ATTENDANCE SHIELD & PROXY ATTENDANCE
+// ============================================================================
+class AttendanceShieldItem {
+  constructor(tileCol, tileRow) {
+    this.col = tileCol;
+    this.row = tileRow;
+    this.x = tileCol * TILE_SIZE + 6;
+    this.y = tileRow * TILE_SIZE + 6;
+    this.width = 20;
+    this.height = 20;
+    this.collected = false;
+  }
+
+  reset() {
+    this.collected = false;
+  }
+
+  draw(ctx, time) {
+    if (this.collected) return;
+
+    const bob = Math.sin(time * 0.006 + this.col) * 3;
+    const sx = this.x;
+    const sy = this.y + bob;
+
+    ctx.save();
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 12;
+
+    // Glowing energy badge
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+    ctx.beginPath();
+    ctx.arc(sx + 10, sy + 10, 11, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Shield emoji / graphic
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🛡️', sx + 10, sy + 15);
+
+    ctx.restore();
+  }
+}
+
+class ProxyAttendanceItem {
+  constructor(tileCol, tileRow) {
+    this.col = tileCol;
+    this.row = tileRow;
+    this.x = tileCol * TILE_SIZE + 6;
+    this.y = tileRow * TILE_SIZE + 6;
+    this.width = 20;
+    this.height = 20;
+    this.collected = false;
+  }
+
+  reset() {
+    this.collected = false;
+  }
+
+  draw(ctx, time) {
+    if (this.collected) return;
+
+    const bob = Math.sin(time * 0.007 + this.row) * 3;
+    const px = this.x;
+    const py = this.y + bob;
+
+    ctx.save();
+    ctx.shadowColor = '#c084fc';
+    ctx.shadowBlur = 12;
+
+    // Glowing ghostly card
+    ctx.fillStyle = 'rgba(192, 132, 252, 0.25)';
+    ctx.beginPath();
+    ctx.arc(px + 10, py + 10, 11, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ghost emoji
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('👻', px + 10, py + 15);
+
+    ctx.restore();
+  }
+}
+
+// ============================================================================
+// 4. COFFEE PICKUP CLASS
 // ============================================================================
 class CoffeeItem {
   constructor(tileCol, tileRow) {
@@ -290,7 +442,7 @@ class CoffeeItem {
 }
 
 // ============================================================================
-// 4. ENEMY CLASSES (Strict Professor & Flying Assignment)
+// 5. ENEMY CLASSES (Strict Professors & Flying Assignments)
 // ============================================================================
 class Enemy {
   constructor(type, x, y, options = {}) {
@@ -303,19 +455,20 @@ class Enemy {
     if (type === 'professor') {
       this.width = 24;
       this.height = 26;
-      this.speed = options.speed || 85;
-      this.damage = 20;
+      this.speed = options.speed || 80;
+      this.damage = options.damage || 20;
       this.axis = options.axis || 'x'; // 'x' or 'y' patrol
       this.minPos = options.minPos || x - 100;
       this.maxPos = options.maxPos || x + 100;
       this.dir = 1;
       this.name = options.name || "Professor";
+      this.isDean = !!options.isDean;
     } else {
       // Flying Assignment
       this.width = 18;
       this.height = 20;
       this.speed = options.speed || 95;
-      this.damage = 15;
+      this.damage = options.damage || 15;
       this.vx = options.vx || 1;
       this.vy = options.vy || 1;
       this.minX = options.minX || 32;
@@ -375,7 +528,7 @@ class Enemy {
     if (this.type === 'professor') {
       ctx.save();
       // Flashlight / Detection beam
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.12)';
+      ctx.fillStyle = this.isDean ? 'rgba(220, 38, 38, 0.18)' : 'rgba(239, 68, 68, 0.12)';
       ctx.beginPath();
       if (this.axis === 'x') {
         const beamDir = this.dir;
@@ -397,20 +550,20 @@ class Enemy {
       ctx.ellipse(ex + 12, ey + 26, 10, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Suit Coat (Dark Purple / Crimson)
-      ctx.fillStyle = '#4c0519';
+      // Suit Coat (Dark Purple or Dean Gold-Black)
+      ctx.fillStyle = this.isDean ? '#1c1917' : '#4c0519';
       ctx.fillRect(ex + 4, ey + 8, 16, 14);
 
-      // White Shirt & Red Tie
+      // Shirt & Tie
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(ex + 10, ey + 8, 4, 6);
-      ctx.fillStyle = '#dc2626';
+      ctx.fillStyle = this.isDean ? '#eab308' : '#dc2626'; // Gold tie for Dean
       ctx.fillRect(ex + 11, ey + 10, 2, 7);
 
-      // Head & Gray Hair
+      // Head & Hair
       ctx.fillStyle = '#fde68a';
       ctx.fillRect(ex + 7, ey + 2, 10, 7);
-      ctx.fillStyle = '#94a3b8'; // Gray hair
+      ctx.fillStyle = this.isDean ? '#e2e8f0' : '#94a3b8'; // White hair for Dean
       ctx.fillRect(ex + 6, ey, 12, 3);
 
       // Glasses & Angry Brow
@@ -418,20 +571,19 @@ class Enemy {
       ctx.fillRect(ex + 8, ey + 4, 3, 2);
       ctx.fillRect(ex + 13, ey + 4, 3, 2);
 
-      // Clipboard / Grading Pen in hand
+      // Clipboard / Red Pen
       ctx.fillStyle = '#d97706';
       ctx.fillRect(ex + (this.dir > 0 ? 19 : 0), ey + 12, 5, 8);
-      ctx.fillStyle = '#ef4444'; // Red pen
+      ctx.fillStyle = '#ef4444';
       ctx.fillRect(ex + (this.dir > 0 ? 21 : 2), ey + 10, 2, 5);
 
       ctx.restore();
 
     } else {
-      // Flying Assignment (Paper with wings & red 'F')
+      // Flying Assignment (Paper sheet with red F)
       ctx.save();
       const flap = Math.sin(time * 0.015) * 3;
 
-      // Glow aura
       ctx.shadowColor = 'rgba(239, 68, 68, 0.6)';
       ctx.shadowBlur = 8;
 
@@ -439,7 +591,7 @@ class Enemy {
       ctx.fillStyle = '#f8fafc';
       ctx.fillRect(ex + 2, ey + 2 + flap, 14, 16);
 
-      // Paper folded corner
+      // Folded corner
       ctx.fillStyle = '#cbd5e1';
       ctx.beginPath();
       ctx.moveTo(ex + 12, ey + 2 + flap);
@@ -448,7 +600,7 @@ class Enemy {
       ctx.closePath();
       ctx.fill();
 
-      // Red 'F' Grade on paper
+      // Red 'F' Grade
       ctx.fillStyle = '#ef4444';
       ctx.font = 'bold 9px monospace';
       ctx.fillText('F', ex + 6, ey + 13 + flap);

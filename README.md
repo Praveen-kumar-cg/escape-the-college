@@ -9,28 +9,31 @@
 
 ---
 
-## 🕹️ Live Demo
-Play the game directly in your browser:  
+## 🕹️ Play Live in Your Browser
 👉 **[https://praveen-kumar-cg.github.io/escape-the-college/](https://praveen-kumar-cg.github.io/escape-the-college/)**
 
----
-
-## 📖 Story & Objective
-You fell asleep in the library and woke up trapped inside the campus at midnight! The main security gate is locked shut, requiring **3 Department Keys**. 
-
-To survive and graduate, you must navigate the dark collegiate labyrinth, evade strict patrolling professors and flying overdue assignments, collect all keys, and make it to the main gate before the midnight deadline strikes!
+*Tip: Supports Desktop, Mobile phones (landscape touch D-pad), and Classroom Projectors (1-click fullscreen mode).*
 
 ---
 
-## 🎯 Game Features & Objectives
+## 📖 Story & Gameplay Arc
+You fell asleep in the campus library and woke up trapped inside at midnight! To graduate, you must survive **3 rising semesters of academic chaos**:
 
-| Objective | Details |
-| :--- | :--- |
-| 🔑 **Collect 3 Department Keys** | Located across the **Library**, **Computer Lab**, and **Faculty Lounge**. All 3 are required to unlock the Exit Gate. |
-| ☕ **Drink Hot Coffee** | Restores **+25 HP** and grants score points to keep burnout at bay. |
-| 🚨 **Evade Obstacles & Enemies** | Dodge strict professors (*Prof. Hardgrade* & *Dr. Proctor*) and bouncing spectral **F-grade assignments**. |
-| ⏱️ **Beat the Clock** | Escape before the **90-second midnight timer** runs out! |
-| 🚪 **Unlock the Gate** | Once all keys are found, run to the glowing green portal at the main gate to secure your diploma! |
+1. **Semester 1: Freshers' Midnight** (90s timer) — Learn the campus, find 3 keys, and dodge patrolling proctors.
+2. **Semester 2: Mid-Term Mayhem** (75s timer) — Tighter corridors, faster professors, and eerie flickering emergency lights.
+3. **Finals Week: The Graduation Heist** (60s timer) — Extreme security! Dean Strictlaw is on patrol with high-speed exam papers and atmospheric flashlight blackout vision!
+
+---
+
+## ⚡ Key Features
+
+* 🔀 **Procedural Map Generation on Every Try:** Every single run generates a **completely new layout, dynamic doorways, internal room obstacles, and randomized navigation routes**—you never play the exact same design twice!
+* 🛡️ **Attendance 75% Shield:** Collect glowing shields to absorb an enemy strike with 0 damage.
+* 👻 **Proxy Attendance (Invisibility):** Grab the proxy hall pass to become translucent and invincible to all obstacles for 3 seconds!
+* ☕ **Hot Coffee Boosts:** Sip coffee to restore **+25 HP** and boost your score.
+* 🎵 **Procedural Spooky BGM & Web Audio:** Eerie atmospheric drone and mysterious midnight bell chimes synthesized in real-time with zero audio files to download.
+* 📱 **Flawless Phone & Projector Support:** Responsive on-screen sliding D-Pad for mobile and dedicated **⛶ Fullscreen** mode for projectors.
+* 🔒 **100% In-Memory (RAM Only):** All game metrics and session high scores remain strictly in browser RAM—**zero cookies, zero tracking, and zero laptop disk/localStorage footprint**.
 
 ---
 
@@ -41,26 +44,11 @@ To survive and graduate, you must navigate the dark collegiate labyrinth, evade 
 | :--- | :--- |
 | <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or <kbd>▲</kbd> <kbd>◄</kbd> <kbd>▼</kbd> <kbd>►</kbd> | Move Student (Smooth 8-directional movement) |
 | <kbd>P</kbd> or <kbd>Esc</kbd> | Pause / Resume Game |
-| <kbd>R</kbd> | Quick Restart |
+| <kbd>R</kbd> | Quick Restart (Generates a new procedural map!) |
 
-### Mobile & Touch
-- **On-Screen D-Pad**: Full responsive on-screen buttons for touchscreens and mobile devices.
-- **HUD Buttons**: Quick-access buttons for Pause, Restart, and Mute/Unmute audio.
-
----
-
-## 🔒 Privacy & In-Memory Design
-* **100% In-Memory (RAM Only):** All player statistics, health, keys, timer, and scores are managed strictly in the active browser memory session.
-* **Zero Disk Footprint:** No `localStorage`, `sessionStorage`, or cookies are written to your computer or device. Closing or refreshing the tab clears all session data instantly.
-
----
-
-## 🛠️ Tech Stack & Architecture
-
-- **Vanilla JavaScript (ES6+):** Pure object-oriented game loop using `requestAnimationFrame`, separated into modular architecture.
-- **HTML5 Canvas:** 2D tile-map rendering with sub-pixel collision sliding along walls.
-- **Procedural Web Audio API:** Zero external audio dependencies—all sound effects (key pickup chimes, damage impacts, coffee boosts, victory fanfares) are synthesized mathematically in real-time.
-- **Responsive CSS3:** Neon dark-mode midnight palette with animated frosted-glass UI overlays.
+### Mobile & Projector
+* **Sliding Touch D-Pad:** Ergonomic virtual controller optimized for thumb movement on mobile devices.
+* **⛶ Fullscreen Button:** Instant 1-click fullscreen scaling to fill auditorium and classroom projectors.
 
 ---
 
@@ -69,35 +57,27 @@ To survive and graduate, you must navigate the dark collegiate labyrinth, evade 
 ```text
 escape-the-college/
 ├── index.html          # HTML structure, UI screens, HUD, and Canvas
-├── style.css           # Modern collegiate cyber-dark styling & animations
+├── style.css           # Collegiate cyber-dark styling, animations & responsive media queries
 ├── README.md           # Documentation & project information
 └── js/
-    ├── audio.js        # Web Audio API sound synthesizer
-    ├── entities.js     # Player, Enemy, Key, and Coffee classes
-    ├── map.js          # Campus grid tile-map and collision system
-    └── game.js         # Core game loop, input handling, and state machine
+    ├── audio.js        # Procedural spooky BGM & Web Audio synthesizer
+    ├── entities.js     # Player, Enemies, Keys, Shields, and Proxies
+    ├── map.js          # Procedural campus tile-map generator & dynamic lighting
+    └── game.js         # Core game loop, 3-level progression & input manager
 ```
 
 ---
 
-## 🚀 How to Run Locally
+## 🚀 Running Locally
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Praveen-kumar-cg/escape-the-college.git
-   cd escape-the-college
-   ```
-
-2. **Open the game:**
-   - Double-click [`index.html`](file:///C:/Users/Praveen%20kumar/.gemini/antigravity/scratch/escape-the-college/index.html) to run it directly in any modern browser (Chrome, Edge, Firefox, Safari).
-   - *Optional:* Launch with a lightweight HTTP server:
-     ```bash
-     npx serve .
-     # or
-     python -m http.server 8000
-     ```
+```bash
+git clone https://github.com/Praveen-kumar-cg/escape-the-college.git
+cd escape-the-college
+# Double click index.html or open with a local web server:
+npx serve .
+```
 
 ---
 
 ## 📄 License
-This project is open source and available under the [MIT License](LICENSE).
+Open source and available under the [MIT License](LICENSE).
