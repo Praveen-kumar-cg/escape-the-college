@@ -83,6 +83,7 @@ body {
   transform: translateY(0);
 }
 
+.hidden,
 .screen.hidden {
   display: none !important;
   opacity: 0;

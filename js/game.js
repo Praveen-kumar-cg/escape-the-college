@@ -58,15 +58,15 @@ class EscapeGame {
 
     // Collectible Keys (3 total)
     this.keys = [
-      new KeyItem(1, "Library Key", 2, 2),        // Library
-      new KeyItem(2, "Computer Lab Key", 14, 2),   // Computer Lab
+      new KeyItem(1, "Library Key", 3, 3),        // Library (walkable floor)
+      new KeyItem(2, "Computer Lab Key", 12, 3),   // Computer Lab (walkable floor)
       new KeyItem(3, "Faculty Lounge Key", 22, 4)  // Faculty Lounge
     ];
 
     // Coffee Pickups (3 total)
     this.coffees = [
       new CoffeeItem(6, 2),   // Library
-      new CoffeeItem(18, 2),  // Faculty Lounge
+      new CoffeeItem(20, 3),  // Faculty Lounge (walkable floor)
       new CoffeeItem(8, 15)   // Cafeteria / Study Hall
     ];
 
@@ -80,12 +80,12 @@ class EscapeGame {
         maxPos: 21 * TILE_SIZE,
         name: "Prof. Hardgrade"
       }),
-      // Professor 2: Patrols East Corridor vertically
-      new Enemy('professor', 17 * TILE_SIZE, 3 * TILE_SIZE, {
+      // Professor 2: Patrols Faculty Lounge vertically (stays inside room, no wall-clipping)
+      new Enemy('professor', 17 * TILE_SIZE, 2 * TILE_SIZE, {
         speed: 70,
         axis: 'y',
-        minPos: 2 * TILE_SIZE,
-        maxPos: 14 * TILE_SIZE,
+        minPos: 1.5 * TILE_SIZE,
+        maxPos: 5.5 * TILE_SIZE,
         name: "Dr. Proctor"
       }),
       // Flying Assignment 1: Bounces across Central Hallway
@@ -120,12 +120,13 @@ class EscapeGame {
       })
     ];
 
-    // Gameplay Metrics
+    // Gameplay Metrics (Stored strictly in browser RAM / memory; zero localStorage/disk writes)
     this.totalTime = 90; // 90 seconds countdown
     this.timeRemaining = this.totalTime;
     this.score = 0;
     this.scoreTimer = 0;
     this.keysCollected = 0;
+    this.sessionHighScore = 0; // High score kept strictly in memory during active session
 
     // Loop timing
     this.lastTime = 0;
@@ -332,6 +333,8 @@ class EscapeGame {
     this.state = STATE_GAMEOVER;
     if (window.soundManager) window.soundManager.playGameOver();
 
+    this.sessionHighScore = Math.max(this.sessionHighScore, this.score);
+
     this.gameOverReason.textContent = reason;
     this.gameOverScore.textContent = this.score;
     this.gameOverKeys.textContent = `${this.keysCollected} / 3`;
@@ -351,6 +354,7 @@ class EscapeGame {
     const secs = Math.floor(this.timeRemaining % 60);
     const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
+    this.sessionHighScore = Math.max(this.sessionHighScore, this.score);
     this.victoryScore.textContent = this.score;
     this.victoryTime.textContent = timeStr;
 
