@@ -155,6 +155,33 @@ class SoundManager {
   // SOUND EFFECTS (SFX)
   // ==========================================================================
 
+  // Midnight Grandfather Clock Chime / Bell Gong
+  playClockChime() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const chimeTones = [110, 220, 440, 659.25, 880];
+    chimeTones.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = idx === 0 ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+
+      const amp = idx === 0 ? 0.35 : 0.18 / (idx + 1);
+      gain.gain.setValueAtTime(amp, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 1.8);
+    });
+  }
+
   // Collect Key: Bright sparkling chime
   playKey() {
     if (this.muted) return;

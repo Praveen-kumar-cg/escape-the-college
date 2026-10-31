@@ -147,21 +147,95 @@ class EscapeGame {
     this.lastTime = 0;
     this.animationId = null;
 
-    // Initialize Event Listeners
+    // Initialize Event Listeners & Typewriter
+    this.isStarting = false;
     this.bindEvents();
+    this.initTypewriter();
+  }
+
+  // Typewriter effect for menu tagline
+  initTypewriter() {
+    const textEl = document.getElementById('typewriter-text');
+    if (!textEl) return;
+    const fullText = "One student. One exit. Infinite assignments.";
+    textEl.textContent = "";
+    let charIdx = 0;
+
+    const typeNext = () => {
+      if (charIdx < fullText.length) {
+        textEl.textContent += fullText.charAt(charIdx);
+        charIdx++;
+        setTimeout(typeNext, 45);
+      }
+    };
+    setTimeout(typeNext, 250);
   }
 
   // Bind Buttons, Keyboard, Fullscreen, and Touch
   bindEvents() {
-    // Start Escape Button
+    // Start Escape Button with Screen Flash & Clock Chime
     const startBtn = document.getElementById('start-escape-btn');
     if (startBtn) {
       startBtn.addEventListener('click', () => {
+        if (this.isStarting) return;
+        this.isStarting = true;
+
         if (window.soundManager) {
           window.soundManager.init();
-          window.soundManager.startBgm();
+          window.soundManager.playClockChime();
         }
-        this.startLevel(1);
+
+        const flash = document.getElementById('start-flash-overlay');
+        if (flash) {
+          flash.classList.add('flash-active');
+        }
+
+        this.startScreen.classList.add('start-fade-out');
+
+        setTimeout(() => {
+          if (flash) flash.classList.remove('flash-active');
+          this.startScreen.classList.remove('start-fade-out');
+
+          if (window.soundManager) {
+            window.soundManager.startBgm();
+          }
+          this.startLevel(1);
+          this.isStarting = false;
+        }, 650);
+      });
+    }
+
+    // How to Play Modal
+    const htpBtn = document.getElementById('btn-how-to-play');
+    const htpModal = document.getElementById('how-to-play-modal');
+    const closeHtpBtn = document.getElementById('btn-close-how-to-play');
+
+    if (htpBtn && htpModal) {
+      htpBtn.addEventListener('click', () => {
+        htpModal.classList.remove('hidden');
+        if (window.soundManager) window.soundManager.playClick();
+      });
+    }
+    if (closeHtpBtn && htpModal) {
+      closeHtpBtn.addEventListener('click', () => {
+        htpModal.classList.add('hidden');
+        if (window.soundManager) window.soundManager.playClick();
+      });
+    }
+
+    // Start Menu Sound Toggle Button
+    const menuSoundBtn = document.getElementById('btn-menu-sound');
+    const hudSoundBtn = document.getElementById('btn-sound-toggle');
+
+    if (menuSoundBtn) {
+      menuSoundBtn.addEventListener('click', () => {
+        const isMuted = window.soundManager.toggleMute();
+        const soundLabel = isMuted ? '🔇 Sound: Off' : '🔊 Sound: On';
+        menuSoundBtn.textContent = soundLabel;
+        if (hudSoundBtn) {
+          hudSoundBtn.textContent = isMuted ? '🔇' : '🔊';
+          hudSoundBtn.title = isMuted ? 'Unmute Sound' : 'Mute Sound';
+        }
       });
     }
 
@@ -169,13 +243,17 @@ class EscapeGame {
     document.getElementById('btn-pause-game').addEventListener('click', () => this.togglePause());
     document.getElementById('btn-restart-game').addEventListener('click', () => this.restartGame());
 
-    // Sound Toggle
-    const soundBtn = document.getElementById('btn-sound-toggle');
-    soundBtn.addEventListener('click', () => {
-      const isMuted = window.soundManager.toggleMute();
-      soundBtn.textContent = isMuted ? '🔇' : '🔊';
-      soundBtn.title = isMuted ? 'Unmute Sound' : 'Mute Sound';
-    });
+    // Sound Toggle (HUD)
+    if (hudSoundBtn) {
+      hudSoundBtn.addEventListener('click', () => {
+        const isMuted = window.soundManager.toggleMute();
+        hudSoundBtn.textContent = isMuted ? '🔇' : '🔊';
+        hudSoundBtn.title = isMuted ? 'Unmute Sound' : 'Mute Sound';
+        if (menuSoundBtn) {
+          menuSoundBtn.textContent = isMuted ? '🔇 Sound: Off' : '🔊 Sound: On';
+        }
+      });
+    }
 
     // Fullscreen Toggle (Great for Projectors and Mobile)
     const fsBtn = document.getElementById('btn-fullscreen-toggle');
@@ -539,6 +617,7 @@ class EscapeGame {
     this.gameScreen.classList.add('hidden');
     this.startScreen.classList.remove('hidden');
     this.startScreen.classList.add('active');
+    this.initTypewriter();
 
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);

@@ -6,7 +6,7 @@
   <title>Escape the College — “One student. One exit. Infinite assignments.”</title>
   <meta name="description" content="A thrilling midnight survival arcade game where a trapped student must collect campus keys and dodge strict professors and flying assignments to escape the college.">
   
-  <!-- Modern Google Fonts -->
+  <!-- Modern Google Fonts: Press Start 2P & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -16,72 +16,226 @@
 <body>
   <div id="app-container">
     
+    <!-- Screen Flash Overlay for Start Transition -->
+    <div id="start-flash-overlay" class="flash-overlay"></div>
+
     <!-- Landscape Orientation Hint for Mobile Devices -->
     <div id="landscape-hint" class="landscape-banner">
       <span>📱 Tip: Rotate your phone to Landscape mode for the best arcade view!</span>
     </div>
 
-    <!-- ==================== 1. START SCREEN ==================== -->
+    <!-- ==================== HOW TO PLAY MODAL ==================== -->
+    <div id="how-to-play-modal" class="game-modal-overlay hidden">
+      <div class="modal-card htp-card">
+        <div class="modal-badge-info">SURVIVAL MANUAL</div>
+        <h2 class="modal-title text-gold">HOW TO PLAY</h2>
+        
+        <div class="htp-body">
+          <div class="htp-block">
+            <span class="htp-subtitle">🎮 CONTROLS</span>
+            <div class="htp-controls-grid">
+              <div class="htp-row">
+                <span class="htp-keys"><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> or <span class="kbd">▲</span><span class="kbd">◄</span><span class="kbd">▼</span><span class="kbd">►</span></span>
+                <span class="htp-action">Move Student</span>
+              </div>
+              <div class="htp-row">
+                <span class="htp-keys"><span class="kbd">P</span> or <span class="kbd">ESC</span></span>
+                <span class="htp-action">Pause / Resume</span>
+              </div>
+              <div class="htp-row">
+                <span class="htp-keys"><span class="kbd">R</span></span>
+                <span class="htp-action">Restart (New Map!)</span>
+              </div>
+              <div class="htp-row">
+                <span class="htp-keys"><span class="kbd">Virtual D-Pad</span></span>
+                <span class="htp-action">Touch On Mobile</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="htp-block">
+            <span class="htp-subtitle">🎯 CAMPUS OBJECTIVES</span>
+            <div class="htp-items-grid">
+              <div class="htp-item">🔑 <strong>3 Keys:</strong> Find Library, Computer Lab &amp; Faculty Lounge keys.</div>
+              <div class="htp-item">🛡️ <strong>Attendance Shield:</strong> Absorbs 1 hit without losing health.</div>
+              <div class="htp-item">👻 <strong>Proxy Attendance:</strong> Ghostly invisibility for 3 seconds!</div>
+              <div class="htp-item">☕ <strong>Hot Coffee:</strong> Restores +25 HP and boosts your score.</div>
+              <div class="htp-item">🚪 <strong>Main Gate:</strong> Reach the exit before the countdown ends!</div>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-close-how-to-play" class="primary-btn" type="button">⚡ GOT IT!</button>
+      </div>
+    </div>
+
+    <!-- ==================== 1. START SCREEN: MIDNIGHT LIBRARY ==================== -->
     <section id="start-screen" class="screen active">
-      <div class="start-card">
-        <div class="badge-pill">MIDNIGHT SURVIVAL CHALLENGE — 3 SEMESTERS</div>
+      <div class="midnight-library-container">
         
-        <h1 class="game-title">ESCAPE THE COLLEGE</h1>
-        <p class="tagline">“One student. One exit. Infinite assignments.”</p>
-        
-        <div class="story-box">
-          <p class="story-desc">
-            You fell asleep in the library and woke up trapped inside campus at midnight! 
-            Survive <strong>3 rising semesters of academic chaos</strong>. Each try generates a <strong>completely new procedural layout</strong> so no two escape routes are ever the same!
-          </p>
+        <!-- Background Scene: Bookshelves, Moonlit Window & Clock -->
+        <div class="library-scene" aria-hidden="true">
           
-          <div class="objectives-grid">
-            <div class="objective-item">
-              <span class="obj-icon">🔑</span>
-              <div>
-                <strong>Collect 3 Department Keys</strong>
-                <span>Library, Computer Lab &amp; Faculty Lounge</span>
+          <!-- Left Bookshelf with pixel-art books -->
+          <div class="bookshelf bookshelf-left">
+            <div class="shelf-wood">
+              <div class="book-row">
+                <div class="book b-red b-tall"></div>
+                <div class="book b-blue b-mid"></div>
+                <div class="book b-gold b-short b-tilt"></div>
+                <div class="book b-green b-tall"></div>
+                <div class="book b-purple b-mid"></div>
+                <div class="book b-amber b-short"></div>
               </div>
             </div>
-            <div class="objective-item">
-              <span class="obj-icon">🛡️</span>
-              <div>
-                <strong>Attendance Shield</strong>
-                <span>Absorbs 1 enemy strike completely!</span>
+            <div class="shelf-wood">
+              <div class="book-row">
+                <div class="book b-blue b-tall"></div>
+                <div class="book b-green b-short b-tilt"></div>
+                <div class="book b-red b-mid"></div>
+                <div class="book b-gold b-tall"></div>
+                <div class="book b-purple b-short"></div>
+                <div class="book b-amber b-mid"></div>
               </div>
             </div>
-            <div class="objective-item">
-              <span class="obj-icon">👻</span>
-              <div>
-                <strong>Proxy Attendance</strong>
-                <span>Become ghostly &amp; invincible for 3 seconds!</span>
+            <div class="shelf-wood">
+              <div class="book-row">
+                <div class="book b-purple b-short"></div>
+                <div class="book b-gold b-tall"></div>
+                <div class="book b-blue b-mid b-tilt"></div>
+                <div class="book b-red b-tall"></div>
+                <div class="book b-green b-short"></div>
+                <div class="book b-amber b-tall"></div>
               </div>
             </div>
-            <div class="objective-item">
-              <span class="obj-icon">☕</span>
-              <div>
-                <strong>Hot Coffee Boost</strong>
-                <span>Restores +25 HP and boosts your score</span>
+          </div>
+
+          <!-- Central Window with Moonlight Beam & Wall Clock -->
+          <div class="window-area">
+            
+            <!-- Wall Clock Showing 11:59 PM -->
+            <div class="retro-wall-clock" title="11:59 PM - Midnight is striking!">
+              <div class="clock-outer-rim">
+                <div class="clock-face">
+                  <div class="clock-num clock-num-12">XII</div>
+                  <div class="clock-num clock-num-3">III</div>
+                  <div class="clock-num clock-num-6">VI</div>
+                  <div class="clock-num clock-num-9">IX</div>
+                  <!-- Hour hand pointing at ~11:59 -->
+                  <div class="clock-hand hand-hour"></div>
+                  <!-- Minute hand pointing at 59 -->
+                  <div class="clock-hand hand-min"></div>
+                  <!-- Ticking second hand -->
+                  <div class="clock-hand hand-sec"></div>
+                  <div class="clock-center-pin"></div>
+                </div>
               </div>
+              <div class="clock-digital-tag">11:59 PM</div>
+            </div>
+
+            <!-- Gothic Arched Window -->
+            <div class="gothic-window">
+              <div class="sky-backdrop">
+                <div class="moon">🌙</div>
+                <div class="star star-1">✦</div>
+                <div class="star star-2">✦</div>
+                <div class="star star-3">✦</div>
+                <div class="star star-4">✦</div>
+                <div class="star star-5">✦</div>
+                
+                <!-- Professor Silhouette walking past every ~8 seconds -->
+                <div class="professor-silhouette"></div>
+              </div>
+              <div class="window-bars">
+                <div class="bar-v"></div>
+                <div class="bar-h"></div>
+                <div class="arch-frame"></div>
+              </div>
+            </div>
+
+            <!-- Moonbeam Light Rays with Floating Dust Particles -->
+            <div class="moonlight-beam">
+              <div class="dust-mote d-1"></div>
+              <div class="dust-mote d-2"></div>
+              <div class="dust-mote d-3"></div>
+              <div class="dust-mote d-4"></div>
+              <div class="dust-mote d-5"></div>
+              <div class="dust-mote d-6"></div>
+            </div>
+
+          </div>
+
+          <!-- Right Bookshelf with pixel-art books -->
+          <div class="bookshelf bookshelf-right">
+            <div class="shelf-wood">
+              <div class="book-row">
+                <div class="book b-green b-tall"></div>
+                <div class="book b-purple b-short"></div>
+                <div class="book b-amber b-tall b-tilt"></div>
+                <div class="book b-blue b-short"></div>
+                <div class="book b-red b-mid"></div>
+                <div class="book b-gold b-tall"></div>
+              </div>
+            </div>
+            <div class="shelf-wood">
+              <div class="book-row">
+                <div class="book b-gold b-short"></div>
+                <div class="book b-red b-tall b-tilt"></div>
+                <div class="book b-blue b-short"></div>
+                <div class="book b-green b-tall"></div>
+                <div class="book b-amber b-mid"></div>
+                <div class="book b-purple b-short"></div>
+              </div>
+            </div>
+            <div class="shelf-wood">
+              <div class="book-row">
+                <div class="book b-blue b-mid"></div>
+                <div class="book b-green b-tall"></div>
+                <div class="book b-gold b-short"></div>
+                <div class="book b-red b-tall b-tilt"></div>
+                <div class="book b-purple b-mid"></div>
+                <div class="book b-amber b-short"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating Ghost Emojis drifting lazily in the library -->
+          <div class="floating-ghost ghost-1">👻</div>
+          <div class="floating-ghost ghost-2">👻</div>
+          <div class="floating-ghost ghost-3">👻</div>
+          <div class="floating-ghost ghost-4">👻</div>
+
+        </div>
+
+        <!-- Foreground Menu Card -->
+        <div class="start-card midnight-card">
+          <div class="badge-pill">MIDNIGHT SURVIVAL ARCADE</div>
+          
+          <h1 class="game-title neon-title">ESCAPE THE COLLEGE</h1>
+          
+          <div class="tagline-wrapper">
+            <p id="typewriter-tagline" class="tagline typewriter-tagline">
+              <span id="typewriter-text"></span><span class="typewriter-cursor">|</span>
+            </p>
+          </div>
+
+          <!-- Menu Action Buttons -->
+          <div class="menu-actions-stack">
+            <button id="start-escape-btn" class="primary-btn pulse-glow" type="button">
+              <span class="btn-icon">⚡</span> START ESCAPE
+            </button>
+            
+            <div class="secondary-actions-row">
+              <button id="btn-how-to-play" class="secondary-btn menu-sec-btn" type="button">
+                📖 How to Play
+              </button>
+              <button id="btn-menu-sound" class="secondary-btn menu-sec-btn" type="button">
+                🔊 Sound: On
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Controls Overview -->
-        <div class="controls-hint-card">
-          <span class="controls-title">CONTROLS:</span>
-          <div class="keys-display">
-            <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> or
-            <span class="kbd">▲</span><span class="kbd">◄</span><span class="kbd">▼</span><span class="kbd">►</span> Move &nbsp;|&nbsp;
-            <span class="kbd">P</span> Pause &nbsp;|&nbsp;
-            <span class="kbd">R</span> Restart &nbsp;|&nbsp;
-            <span>Touch D-Pad on Mobile</span>
-          </div>
-        </div>
-
-        <button id="start-escape-btn" class="primary-btn pulse-glow" type="button">
-          <span class="btn-icon">⚡</span> START ESCAPE
-        </button>
       </div>
     </section>
 
