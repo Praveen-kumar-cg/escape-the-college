@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escape the College — “One student. One exit. Infinite assignments.”</title>
+  <meta name="description" content="A thrilling midnight survival arcade game where a trapped student must collect campus keys and dodge strict professors and flying assignments to escape the college.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app-container">
+    
+    <!-- ==================== 1. START SCREEN ==================== -->
+    <section id="start-screen" class="screen active">
+      <div class="start-card">
+        <div class="badge-pill">MIDNIGHT SURVIVAL CHALLENGE</div>
+        
+        <h1 class="game-title">ESCAPE THE COLLEGE</h1>
+        <p class="tagline">“One student. One exit. Infinite assignments.”</p>
+        
+        <div class="story-box">
+          <p class="story-desc">
+            You fell asleep in the library and woke up trapped inside the campus at midnight! 
+            The main security gate is locked with <strong>3 Department Keys</strong>.
+            Evade strict roving professors and flying overdue assignments to find the keys and reach the exit before the midnight deadline!
+          </p>
+          
+          <div class="objectives-grid">
+            <div class="objective-item">
+              <span class="obj-icon">🔑</span>
+              <div>
+                <strong>Collect 3 Keys</strong>
+                <span>Library, Computer Lab &amp; Faculty Lounge</span>
+              </div>
+            </div>
+            <div class="objective-item">
+              <span class="obj-icon">☕</span>
+              <div>
+                <strong>Grab Coffee Cups</strong>
+                <span>Restore +25 HP and boost your score</span>
+              </div>
+            </div>
+            <div class="objective-item">
+              <span class="obj-icon">🚨</span>
+              <div>
+                <strong>Dodge Obstacles</strong>
+                <span>Avoid patrolling professors &amp; flying assignments</span>
+              </div>
+            </div>
+            <div class="objective-item">
+              <span class="obj-icon">🚪</span>
+              <div>
+                <strong>Reach Main Exit</strong>
+                <span>Escape before health or time runs out!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Overview -->
+        <div class="controls-hint-card">
+          <span class="controls-title">CONTROLS:</span>
+          <div class="keys-display">
+            <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> or
+            <span class="kbd">▲</span><span class="kbd">◄</span><span class="kbd">▼</span><span class="kbd">►</span> Move &nbsp;|&nbsp;
+            <span class="kbd">P</span> Pause &nbsp;|&nbsp;
+            <span class="kbd">R</span> Restart
+          </div>
+        </div>
+
+        <button id="start-escape-btn" class="primary-btn pulse-glow" type="button">
+          <span class="btn-icon">⚡</span> START ESCAPE
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== 2. GAME SCREEN ==================== -->
+    <section id="game-screen" class="screen hidden">
+      <!-- Top HUD Header -->
+      <header class="game-hud">
+        <div class="hud-left">
+          <div class="hud-brand">
+            <span class="hud-logo-icon">🎓</span>
+            <span class="hud-brand-text">ESCAPE THE COLLEGE</span>
+          </div>
+
+          <!-- Health Indicator -->
+          <div class="hud-metric hud-health">
+            <span class="hud-label">HEALTH</span>
+            <div class="health-bar-track">
+              <div id="health-bar-fill" class="health-bar-fill" style="width: 100%;"></div>
+            </div>
+            <span id="health-text" class="hud-value">100 HP</span>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <!-- Keys Counter -->
+          <div class="hud-metric hud-keys">
+            <span class="hud-label">KEYS FOUND</span>
+            <div class="keys-tracker">
+              <span id="key-icon-1" class="key-tracker-slot" title="Library Key">🔑</span>
+              <span id="key-icon-2" class="key-tracker-slot" title="Lab Key">🔑</span>
+              <span id="key-icon-3" class="key-tracker-slot" title="Admin Key">🔑</span>
+              <span id="keys-count-text" class="keys-text">0 / 3</span>
+            </div>
+          </div>
+
+          <!-- Countdown Timer -->
+          <div class="hud-metric hud-timer">
+            <span class="hud-label">TIME LEFT</span>
+            <span id="timer-display" class="hud-value hud-timer-value">01:30</span>
+          </div>
+
+          <!-- Score Display -->
+          <div class="hud-metric hud-score">
+            <span class="hud-label">SCORE</span>
+            <span id="score-display" class="hud-value">0</span>
+          </div>
+        </div>
+
+        <!-- HUD Action Controls -->
+        <div class="hud-actions">
+          <button id="btn-sound-toggle" class="hud-btn" type="button" title="Toggle Sound">🔊</button>
+          <button id="btn-pause-game" class="hud-btn" type="button" title="Pause Game (P)">⏸ Pause</button>
+          <button id="btn-restart-game" class="hud-btn" type="button" title="Restart Game (R)">🔄 Restart</button>
+        </div>
+      </header>
+
+      <!-- Objective Status Banner -->
+      <div id="hud-status-banner" class="status-banner">
+        <span id="status-message">Objective: Search the rooms and collect all 3 keys to unlock the College Exit Gate!</span>
+      </div>
+
+      <!-- Main Canvas Wrapper -->
+      <div class="canvas-wrapper">
+        <canvas id="game-canvas" width="800" height="576"></canvas>
+
+        <!-- Overlays inside Canvas Wrapper -->
+        <!-- Pause Overlay -->
+        <div id="pause-overlay" class="game-modal-overlay hidden">
+          <div class="modal-card">
+            <h2 class="modal-title">GAME PAUSED</h2>
+            <p class="modal-subtitle">Take a breath, student. The deadlines are waiting.</p>
+            <div class="modal-actions">
+              <button id="btn-resume-game" class="primary-btn" type="button">▶ Resume</button>
+              <button id="btn-modal-restart" class="secondary-btn" type="button">🔄 Restart</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Over Overlay -->
+        <div id="game-over-overlay" class="game-modal-overlay hidden">
+          <div class="modal-card failure-card">
+            <div class="modal-badge-danger">EXPELLED!</div>
+            <h2 id="game-over-title" class="modal-title text-danger">ESCAPE FAILED</h2>
+            <p id="game-over-reason" class="modal-reason">You were overwhelmed by academic burnout!</p>
+            
+            <div class="stats-summary">
+              <div class="stat-box">
+                <span class="stat-label">FINAL SCORE</span>
+                <span id="gameover-score" class="stat-value">0</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">KEYS FOUND</span>
+                <span id="gameover-keys" class="stat-value">0 / 3</span>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button id="btn-gameover-restart" class="primary-btn" type="button">🔄 Try Again</button>
+              <button id="btn-gameover-home" class="secondary-btn" type="button">🏠 Main Menu</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Victory Overlay -->
+        <div id="victory-overlay" class="game-modal-overlay hidden">
+          <div class="modal-card success-card">
+            <div class="modal-badge-success">DIPLOMA SECURED!</div>
+            <h2 class="modal-title text-success">CAMPUS ESCAPED!</h2>
+            <p class="modal-reason">You survived the midnight horrors, unlocked the main gate, and escaped the college!</p>
+            
+            <div class="stats-summary">
+              <div class="stat-box">
+                <span class="stat-label">FINAL SCORE</span>
+                <span id="victory-score" class="stat-value">0</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">TIME REMAINING</span>
+                <span id="victory-time" class="stat-value">00:00</span>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button id="btn-victory-restart" class="primary-btn pulse-glow" type="button">⚡ Play Again</button>
+              <button id="btn-victory-home" class="secondary-btn" type="button">🏠 Main Menu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Touch / Keyboard Helper Bar -->
+      <footer class="game-footer">
+        <div class="footer-tips">
+          <span>💡 <strong>Tip:</strong> Avoid glowing red assignment sheets and patrol cones. Coffee restores health!</span>
+        </div>
+        
+        <!-- On-Screen Touch / D-pad Controls for Mobile / Click -->
+        <div class="dpad-container" id="dpad-controls">
+          <button class="dpad-btn dpad-up" id="dpad-up" aria-label="Up">▲</button>
+          <div class="dpad-row">
+            <button class="dpad-btn dpad-left" id="dpad-left" aria-label="Left">◄</button>
+            <button class="dpad-btn dpad-down" id="dpad-down" aria-label="Down">▼</button>
+            <button class="dpad-btn dpad-right" id="dpad-right" aria-label="Right">►</button>
+          </div>
+        </div>
+      </footer>
+    </section>
+
+  </div>
+
+  <!-- Modular Scripts loaded in sequence -->
+  <script src="js/audio.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
