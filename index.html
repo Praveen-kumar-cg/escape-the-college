@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
   
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=3.1">
+  <link rel="stylesheet" href="style.css?v=4.0">
 </head>
 <body>
   <div id="app-container">
@@ -162,6 +162,68 @@
             </div>
           </div>
         </div>
+
+        
+    <!-- ==================== CUSTOMIZE MODAL ==================== -->
+    <div id="customize-modal" class="game-modal-overlay hidden">
+      <div class="modal-card customize-card">
+        <div class="modal-badge-info">RUN LOADOUT</div>
+        <h2 class="modal-title text-gold">CUSTOMIZE RUN</h2>
+        
+        <div class="customize-body">
+          <div class="menu-setting-group">
+            <span class="setting-label">DIFFICULTY LEVEL:</span>
+            <div class="difficulty-picker" id="difficulty-picker">
+              <button class="diff-btn" data-diff="fresher" type="button" onclick="window.selectDifficulty && window.selectDifficulty('fresher')">Fresher</button>
+              <button class="diff-btn active" data-diff="backbencher" type="button" onclick="window.selectDifficulty && window.selectDifficulty('backbencher')">Backbencher</button>
+              <button class="diff-btn" data-diff="topper" type="button" onclick="window.selectDifficulty && window.selectDifficulty('topper')">Topper</button>
+              <button class="diff-btn" data-diff="final_year" type="button" onclick="window.selectDifficulty && window.selectDifficulty('final_year')">Final Year</button>
+            </div>
+            <label class="one-hit-label" title="One strike from an enemy or projectile ends the run!">
+              <input type="checkbox" id="one-hit-checkbox" onchange="window.toggleOneHit && window.toggleOneHit(this.checked)"> 💀 One-Hit Ends Run
+            </label>
+          </div>
+
+          <div class="menu-setting-group">
+            <span class="setting-label">STUDENT SKIN:</span>
+            <div class="skin-picker" id="skin-picker">
+              <button class="skin-btn active" data-skin="hoodie" type="button" title="Classic Cyan Hoodie" onclick="window.selectSkin && window.selectSkin('hoodie')">🧥 Hoodie</button>
+              <button class="skin-btn" data-skin="topper" type="button" title="Gold Scholar Robe &amp; Mortarboard" onclick="window.selectSkin && window.selectSkin('topper')">🎓 Topper</button>
+              <button class="skin-btn" data-skin="ninja" type="button" title="Stealth Midnight Shinobi" onclick="window.selectSkin && window.selectSkin('ninja')">🥷 Ninja</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-close-customize" class="primary-btn" type="button" onclick="window.closeCustomizeModal && window.closeCustomizeModal()">⚡ SAVE &amp; CLOSE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CREDITS MODAL ==================== -->
+    <div id="credits-modal" class="game-modal-overlay hidden">
+      <div class="modal-card credits-card">
+        <div class="modal-badge-info">PIXELRUSH STUDIOS</div>
+        <h2 class="modal-title text-gold">CREDITS</h2>
+        
+        <div class="credits-body">
+          <p class="credits-hero">Built solo at <span class="pixelrush-badge">PixelRush</span></p>
+          <p class="credits-tagline">"One student. One exit. Infinite assignments."</p>
+          
+          <div class="credits-grid">
+            <div class="credit-row"><span class="c-role">Design &amp; Code:</span> <span class="c-name">PixelRush</span></div>
+            <div class="credit-row"><span class="c-role">Audio Engine:</span> <span class="c-name">Procedural Web Audio Synth</span></div>
+            <div class="credit-row"><span class="c-role">Graphics:</span> <span class="c-name">Pure HTML5 Canvas Pixel-Art</span></div>
+            <div class="credit-row"><span class="c-role">Special Thanks:</span> <span class="c-name">Backbenchers everywhere</span></div>
+          </div>
+          <p class="credits-disclaimer">"No students were harmed, only GPAs."</p>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-close-credits" class="primary-btn" type="button" onclick="window.closeCreditsModal && window.closeCreditsModal()">⚡ CLOSE</button>
+        </div>
+      </div>
+    </div>
 
         <!-- Settings Modal -->
         <div id="settings-modal" class="game-modal-overlay hidden">
@@ -325,6 +387,11 @@
             </div>
           </div>
 
+          
+          <!-- Drifting Midnight Fog Layers -->
+          <div class="fog-drift-layer fog-layer-1"></div>
+          <div class="fog-drift-layer fog-layer-2"></div>
+  
           <!-- Floating Ghost Emojis drifting lazily in the library -->
           <div class="floating-ghost ghost-1">👻</div>
           <div class="floating-ghost ghost-2">👻</div>
@@ -345,45 +412,20 @@
             </p>
           </div>
 
-          <!-- Menu Settings: Difficulty & Student Skin -->
-          <div class="menu-config-panel">
-            <div class="menu-setting-group">
-              <span class="setting-label">DIFFICULTY:</span>
-              <div class="difficulty-picker" id="difficulty-picker">
-                <button class="diff-btn" data-diff="fresher" type="button" onclick="window.selectDifficulty && window.selectDifficulty('fresher')">Fresher</button>
-                <button class="diff-btn active" data-diff="backbencher" type="button" onclick="window.selectDifficulty && window.selectDifficulty('backbencher')">Backbencher</button>
-                <button class="diff-btn" data-diff="topper" type="button" onclick="window.selectDifficulty && window.selectDifficulty('topper')">Topper</button>
-                <button class="diff-btn" data-diff="final_year" type="button" onclick="window.selectDifficulty && window.selectDifficulty('final_year')">Final Year</button>
-              </div>
-              <label class="one-hit-label" title="One strike from an enemy or projectile ends the run!">
-                <input type="checkbox" id="one-hit-checkbox" onchange="window.toggleOneHit && window.toggleOneHit(this.checked)"> 💀 One-Hit Ends Run
-              </label>
-            </div>
-
-            <div class="menu-setting-group">
-              <span class="setting-label">STUDENT SKIN:</span>
-              <div class="skin-picker" id="skin-picker">
-                <button class="skin-btn active" data-skin="hoodie" type="button" title="Classic Cyan Hoodie" onclick="window.selectSkin && window.selectSkin('hoodie')">🧥 Hoodie</button>
-                <button class="skin-btn" data-skin="topper" type="button" title="Gold Scholar Robe & Mortarboard" onclick="window.selectSkin && window.selectSkin('topper')">🎓 Topper</button>
-                <button class="skin-btn" data-skin="ninja" type="button" title="Stealth Midnight Shinobi" onclick="window.selectSkin && window.selectSkin('ninja')">🥷 Ninja</button>
-              </div>
-            </div>
-          </div>
-
           <!-- Menu Action Buttons -->
           <div class="menu-actions-stack">
-            <button id="start-escape-btn" class="primary-btn pulse-glow" type="button" onclick="window.startEscapeGame && window.startEscapeGame()">
+            <button id="start-escape-btn" class="primary-btn hero-start-btn pulse-glow" type="button" onclick="window.startEscapeGame && window.startEscapeGame()">
               <span class="btn-icon">⚡</span> START ESCAPE
             </button>
-            <button id="start-daily-btn" class="primary-btn daily-challenge-btn" type="button" onclick="window.startDailyChallenge && window.startDailyChallenge()">
+            <button id="start-daily-btn" class="secondary-btn daily-challenge-btn" type="button" onclick="window.startDailyChallenge && window.startDailyChallenge()">
               <span class="btn-icon">📅</span> DAILY CHALLENGE
             </button>
             
             <div class="secondary-actions-row">
-              <button id="btn-how-to-play" class="secondary-btn menu-sec-btn" type="button" onclick="window.openHowToPlayModal && window.openHowToPlayModal()">📖 How to Play</button>
-              <button id="btn-menu-sound" class="secondary-btn menu-sec-btn" type="button" onclick="window.toggleSound && window.toggleSound()">🔊 Sound: On</button>
+              <button id="btn-menu-customize" class="secondary-btn menu-sec-btn" type="button" onclick="window.openCustomizeModal && window.openCustomizeModal()">🎨 Customize</button>
               <button id="btn-menu-stats" class="secondary-btn menu-sec-btn" type="button" onclick="window.openStatsModal && window.openStatsModal()">🏆 Stats &amp; Badges</button>
               <button id="btn-menu-settings" class="secondary-btn menu-sec-btn" type="button" onclick="window.openSettingsModal && window.openSettingsModal()">⚙️ Settings</button>
+              <button id="btn-menu-credits" class="secondary-btn menu-sec-btn" type="button" onclick="window.openCreditsModal && window.openCreditsModal()">📜 Credits</button>
             </div>
           </div>
         </div>
@@ -471,6 +513,14 @@
         <div class="canvas-wrapper">
           <canvas id="game-canvas" width="800" height="576"></canvas>
 
+          <!-- In-Game Contextual Onboarding Hint Toast -->
+          <div id="hud-hint-toast" class="hud-hint-toast hidden"></div>
+          
+          <!-- Audio Gate Banner -->
+          <div id="audio-gate-banner" class="audio-gate-banner" onclick="window.initAudioGate && window.initAudioGate()">
+            <span>🔊 TAP ANYWHERE TO UNLOCK SOUND</span>
+          </div>
+
           <!-- Damage Edge Flash Overlay (Red border on hit) -->
           <div id="damage-flash-overlay" class="damage-flash-overlay"></div>
 
@@ -503,6 +553,7 @@
               <button id="btn-resume-game" class="primary-btn" type="button">▶ Resume</button>
               <button id="btn-modal-stats" class="secondary-btn" type="button">🏆 Stats</button>
               <button id="btn-modal-settings" class="secondary-btn" type="button">⚙️ Settings</button>
+              <button id="btn-pause-credits" class="secondary-btn" type="button" onclick="window.openCreditsModal && window.openCreditsModal()">📜 Credits</button>
               <button id="btn-modal-restart" class="secondary-btn" type="button">🔄 Restart</button>
             </div>
           </div>
@@ -630,15 +681,15 @@
   </div>
 
   <!-- Modular Scripts loaded in sequence -->
-  <script src="js/audio.js?v=3.1"></script>
-  <script src="js/map.js?v=3.1"></script>
-  <script src="js/entities.js?v=3.1"></script>
-  <script src="js/game.js?v=3.1"></script>
+  <script src="js/audio.js?v=4.0"></script>
+  <script src="js/map.js?v=4.0"></script>
+  <script src="js/entities.js?v=4.0"></script>
+  <script src="js/game.js?v=4.0"></script>
   <!-- Service Worker Registration for PWA Offline Play -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=3.1').then((reg) => {
+        navigator.serviceWorker.register('./sw.js?v=4.0').then((reg) => {
           reg.update().catch(() => {});
         }).catch(() => {});
       });

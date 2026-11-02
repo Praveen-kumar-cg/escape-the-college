@@ -161,6 +161,7 @@ class EscapeGame {
 
     // Visual Effects & Story Log State
     this.screenShake = 0;
+    this.hitStopTimer = 0;
     this.currentRoom = null;
     this.roomPopupTimer = null;
     this.storyLogs = [];
@@ -451,7 +452,7 @@ class EscapeGame {
     }
 
     // Close Modals on Clicking Background Overlay
-    [htpModal, statsModal, settingsModal].forEach(modal => {
+    [htpModal, statsModal, settingsModal, document.getElementById("customize-modal"), document.getElementById("credits-modal")].forEach(modal => {
       if (modal) {
         modal.addEventListener('click', (e) => {
           if (e.target === modal) {
@@ -905,6 +906,31 @@ class EscapeGame {
     if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
   }
 
+
+  openCustomize() {
+    const modal = document.getElementById('customize-modal');
+    if (modal) modal.classList.remove('hidden');
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  closeCustomize() {
+    const modal = document.getElementById('customize-modal');
+    if (modal) modal.classList.add('hidden');
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  openCredits() {
+    const modal = document.getElementById('credits-modal');
+    if (modal) modal.classList.remove('hidden');
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  closeCredits() {
+    const modal = document.getElementById('credits-modal');
+    if (modal) modal.classList.add('hidden');
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
   openStats() {
     const statsModal = document.getElementById('stats-modal');
     if (statsModal) statsModal.classList.remove('hidden');
@@ -1168,14 +1194,14 @@ class EscapeGame {
     this.enemies.push(new Enemy('warden', 19 * TILE_SIZE, 3 * TILE_SIZE, {
       speed: 125 + this.level * 6,
       damage: 20 + this.level * 2,
-      name: "Chief Warden"
+      name: "Chief Warden Saxena"
     }));
 
     // Assignment Drone: Homes in and explodes on contact
     this.enemies.push(new Enemy('drone', 14 * TILE_SIZE, 13 * TILE_SIZE, {
       speed: 80 + this.level * 8,
       damage: 22,
-      name: "Assignment Drone"
+      name: "Assignment Drone #404"
     }));
 
     // Level 2 & 3: Ghost Senior (phases through walls, flickers in and out)
@@ -1183,7 +1209,7 @@ class EscapeGame {
       this.enemies.push(new Enemy('ghost_senior', 3 * TILE_SIZE, 3 * TILE_SIZE, {
         speed: 46 + this.level * 4,
         damage: 16 + this.level * 2,
-        name: "Ghost Senior"
+        name: "Ghost Senior Rahul (Batch of '17)"
       }));
 
       // Extra Professor for Level 2 & 3
@@ -1207,7 +1233,7 @@ class EscapeGame {
         axis: 'x',
         minPos: 12 * TILE_SIZE,
         maxPos: 22 * TILE_SIZE,
-        name: "Dean Strictlaw",
+        name: "Dean Malhotra (Discipline)",
         isDean: true
       }));
 
@@ -1242,6 +1268,24 @@ class EscapeGame {
     this.bossDefeated = false;
     this.bossProjectiles = [];
     this.answerKeys = [];
+
+    // Reset Run Metrics & Timers
+    this.keysCollected = 0;
+    this.hitStopTimer = 0;
+    this.damageTakenThisRun = 0;
+    this.coffeesDrunkThisRun = 0;
+    this.ghostChaseTimer = 0;
+    if (this.damageFlashOverlay) {
+      this.damageFlashOverlay.classList.remove('low-health-active');
+      this.damageFlashOverlay.classList.remove('flash-active');
+    }
+    if (window.particleSystem) {
+      window.particleSystem.reset();
+    }
+    if (window.soundManager) {
+      window.soundManager.stopBossTheme();
+      window.soundManager.startBgm();
+    }
 
     // Phase 5 & 6: Difficulty Modifiers & Run Tracking
     if (levelNumber === 1) {
@@ -1445,7 +1489,22 @@ class EscapeGame {
   // ==========================================================================
 
   triggerDamageEffects() {
-    this.screenShake = 0.35;
+    // 60ms Hit-Stop arcade freeze frame
+    this.hitStopTimer = 0.06;
+
+    // Respect screen shake setting
+    if (this.screenShakeEnabled) {
+      this.screenShake = 0.35;
+    } else {
+      this.screenShake = 0;
+    }
+
+    // Haptic feedback if available on mobile
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try { navigator.vibrate(70); } catch (e) {}
+    }
+
+    // Red edge damage vignette flash
     if (this.damageFlashOverlay) {
       this.damageFlashOverlay.classList.remove('flash-active');
       void this.damageFlashOverlay.offsetWidth;
@@ -1454,8 +1513,29 @@ class EscapeGame {
         if (this.damageFlashOverlay) {
           this.damageFlashOverlay.classList.remove('flash-active');
         }
-      }, 250);
+      }, 240);
     }
+  }
+
+
+  showHint(hintKey, text) {
+    if (!this.shownHints) this.shownHints = new Set();
+    if (this.shownHints.has(hintKey)) return;
+    this.shownHints.add(hintKey);
+
+    const toast = document.getElementById('hud-hint-toast');
+    if (!toast) return;
+    toast.innerHTML = `<span style="color:#facc15">💡 TIP:</span> ${text}`;
+    toast.classList.remove('hidden');
+    toast.classList.remove('hint-fade-out');
+
+    if (this.hintTimer) clearTimeout(this.hintTimer);
+    this.hintTimer = setTimeout(() => {
+      if (toast) {
+        toast.classList.add('hint-fade-out');
+        setTimeout(() => toast.classList.add('hidden'), 400);
+      }
+    }, 4500);
   }
 
   showRoomPopup(roomName) {
@@ -1658,16 +1738,21 @@ class EscapeGame {
     const color = isExit ? '#10b981' : '#facc15';
     ctx.fillStyle = color;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 12;
 
     // Sharp glowing cyber chevron arrow
     ctx.beginPath();
-    ctx.moveTo(9, 0);
-    ctx.lineTo(-7, -6);
+    ctx.moveTo(11, 0);
+    ctx.lineTo(-7, -7);
     ctx.lineTo(-3, 0);
-    ctx.lineTo(-7, 6);
+    ctx.lineTo(-7, 7);
     ctx.closePath();
     ctx.fill();
+
+    // Beacon label text
+    ctx.font = "bold 6px 'Press Start 2P', monospace";
+    ctx.textAlign = 'center';
+    ctx.fillText(isExit ? 'EXIT' : 'KEY', 0, -11);
 
     ctx.restore();
   }
@@ -1836,13 +1921,19 @@ class EscapeGame {
     this.addStoryLog(`Game Over: ${reason}`, 'damage');
 
     const funnyLoseReasons = [
+      "Detained for 74.9% attendance (Dean refused rounding up)!",
+      "Caught copying DSA assignment code from StackOverflow!",
       "Sentenced to 8 AM remedial lectures forever!",
-      "Dean Strictlaw assigned 500 pages of extra homework!",
-      "Detained! Your attendance dropped to 42%!",
-      "Backlogs will follow you into eternity!",
-      "Caught without campus ID past curfew!"
+      "Fell asleep in the 8:00 AM lecture and never woke up!",
+      "Prof yelled: 'Submit physical copy in 2 minutes!'",
+      "Dean Malhotra assigned 500 pages of extra homework!",
+      "Died of severe caffeine crash during finals week!",
+      "Ghost Senior Rahul convinced you to take a drop year!",
+      "ID card expired at midnight — campus security won!",
+      "Caught in 4K skipping the mandatory surprise viva!",
+      "Backlog guaranteed! Better luck next semester!"
     ];
-    this.gameOverReason.textContent = reason || funnyLoseReasons[Math.floor(Math.random() * funnyLoseReasons.length)];
+    this.gameOverReason.textContent = funnyLoseReasons[Math.floor(Math.random() * funnyLoseReasons.length)];
     this.stats.totalDeaths = (this.stats.totalDeaths || 0) + 1;
     this.saveStats();
 
@@ -2430,6 +2521,38 @@ window.toggleSound = () => {
   else if (window.soundManager) window.soundManager.toggleMute();
 };
 
+window.openCustomizeModal = () => {
+  if (window.escapeGame) window.escapeGame.openCustomize();
+  else {
+    const m = document.getElementById('customize-modal');
+    if (m) m.classList.remove('hidden');
+  }
+};
+
+window.closeCustomizeModal = () => {
+  if (window.escapeGame) window.escapeGame.closeCustomize();
+  else {
+    const m = document.getElementById('customize-modal');
+    if (m) m.classList.add('hidden');
+  }
+};
+
+window.openCreditsModal = () => {
+  if (window.escapeGame) window.escapeGame.openCredits();
+  else {
+    const m = document.getElementById('credits-modal');
+    if (m) m.classList.remove('hidden');
+  }
+};
+
+window.closeCreditsModal = () => {
+  if (window.escapeGame) window.escapeGame.closeCredits();
+  else {
+    const m = document.getElementById('credits-modal');
+    if (m) m.classList.add('hidden');
+  }
+};
+
 window.openStatsModal = () => {
   if (window.escapeGame) window.escapeGame.openStats();
   else {
@@ -2486,3 +2609,23 @@ if (document.readyState === 'loading') {
 } else {
   initEscapeGame();
 }
+
+
+// Audio Gate Initialization (Resume AudioContext on user gesture)
+window.initAudioGate = () => {
+  if (window.soundManager) {
+    window.soundManager.init();
+    if (window.soundManager.ctx && window.soundManager.ctx.state === 'suspended') {
+      window.soundManager.ctx.resume().catch(() => {});
+    }
+  }
+  const banner = document.getElementById('audio-gate-banner');
+  if (banner) {
+    banner.style.opacity = '0';
+    setTimeout(() => banner.classList.add('hidden'), 300);
+  }
+};
+
+window.addEventListener('click', () => window.initAudioGate(), { once: true });
+window.addEventListener('keydown', () => window.initAudioGate(), { once: true });
+window.addEventListener('touchstart', () => window.initAudioGate(), { once: true });

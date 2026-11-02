@@ -4,7 +4,7 @@
  * while maintaining 100% offline gameplay.
  */
 
-const CACHE_NAME = 'escape-the-college-v3';
+const CACHE_NAME = 'escape-the-college-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -28,11 +28,11 @@ class CollegeMap {
     this.level = 1;
     this.doors = [];
     this.rooms = {
-      library: { name: "📚 LIBRARY", minCol: 1, maxCol: 6, minRow: 1, maxRow: 6, labelX: 3.5, labelY: 1.5, theme: 'library' },
-      computerLab: { name: "💻 COMPUTER LAB", minCol: 9, maxCol: 15, minRow: 1, maxRow: 6, labelX: 12, labelY: 1.5, theme: 'lab' },
-      facultyLounge: { name: "☕ FACULTY LOUNGE", minCol: 18, maxCol: 23, minRow: 1, maxRow: 6, labelX: 20.5, labelY: 1.5, theme: 'lounge' },
-      studyHall: { name: "🛋️ STUDY HALL", minCol: 1, maxCol: 8, minRow: 11, maxRow: 16, labelX: 4.5, labelY: 11.5, theme: 'study' },
-      lectureHall: { name: "🎓 LECTURE HALL", minCol: 12, maxCol: 23, minRow: 11, maxRow: 16, labelX: 17.5, labelY: 11.5, theme: 'lecture' }
+      library: { name: "LIBRARY", minCol: 1, maxCol: 6, minRow: 1, maxRow: 6, labelX: 3.5, labelY: 1.5, theme: 'library' },
+      computerLab: { name: "COMPUTER LAB", minCol: 9, maxCol: 15, minRow: 1, maxRow: 6, labelX: 12, labelY: 1.5, theme: 'lab' },
+      facultyLounge: { name: "FACULTY LOUNGE", minCol: 18, maxCol: 23, minRow: 1, maxRow: 6, labelX: 20.5, labelY: 1.5, theme: 'lounge' },
+      studyHall: { name: "STUDY HALL", minCol: 1, maxCol: 8, minRow: 11, maxRow: 16, labelX: 4.5, labelY: 11.5, theme: 'study' },
+      lectureHall: { name: "LECTURE HALL", minCol: 12, maxCol: 23, minRow: 11, maxRow: 16, labelX: 17.5, labelY: 11.5, theme: 'lecture' }
     };
     this.generate(1);
   }
@@ -541,9 +541,26 @@ class CollegeMap {
             ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
             if (r === 8 && c === 23) {
-              ctx.font = '16px sans-serif';
-              ctx.textAlign = 'center';
-              ctx.fillText('🔒', x + 16, y + 22);
+              // Crisp Pixel-Art Heavy Padlock
+              ctx.save();
+              ctx.shadowColor = '#ef4444';
+              ctx.shadowBlur = 8;
+              // Metallic Shackle
+              ctx.strokeStyle = '#cbd5e1';
+              ctx.lineWidth = 2.5;
+              ctx.beginPath();
+              ctx.arc(x + 16, y + 14, 5, Math.PI, 0);
+              ctx.stroke();
+              // Heavy Iron Body
+              ctx.fillStyle = '#dc2626';
+              ctx.fillRect(x + 10, y + 14, 12, 11);
+              // Keyhole
+              ctx.fillStyle = '#0f172a';
+              ctx.fillRect(x + 15, y + 17, 2, 4);
+              ctx.beginPath();
+              ctx.arc(x + 16, y + 17, 1.5, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
             }
           } else {
             // Unlocked Gate: Glowing Animated Emerald Freedom Portal!
@@ -581,13 +598,16 @@ class CollegeMap {
     ctx.textAlign = 'center';
     ctx.shadowBlur = 8;
     Object.values(this.rooms).forEach(rm => {
-      ctx.shadowColor = rm.theme === 'lab' ? '#06b6d4' : rm.theme === 'library' ? '#f59e0b' : '#c084fc';
-      ctx.fillStyle = '#f8fafc';
-      ctx.fillText(rm.name, rm.labelX * TILE_SIZE, rm.labelY * TILE_SIZE);
+      const glowColor = rm.theme === 'lab' ? '#06b6d4' : rm.theme === 'library' ? '#facc15' : rm.theme === 'lounge' ? '#c084fc' : '#38bdf8';
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(`[ ${rm.name} ]`, rm.labelX * TILE_SIZE, rm.labelY * TILE_SIZE);
     });
     ctx.shadowColor = '#06b6d4';
+    ctx.shadowBlur = 12;
     ctx.fillStyle = '#67e8f9';
-    ctx.fillText('⚡ MAIN HALLWAY ⚡', 12.5 * TILE_SIZE, 8.8 * TILE_SIZE);
+    ctx.fillText('[ MAIN HALLWAY ]', 12.5 * TILE_SIZE, 8.8 * TILE_SIZE);
     ctx.restore();
 
     // Flashlight & Ambient Darkness Vignette

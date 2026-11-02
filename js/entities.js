@@ -20,8 +20,12 @@ class ParticleSystem {
   }
 
   addBurst(x, y, color, count = 10, speed = 65) {
-    for (let i = 0; i < count; i++) {
-      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+    const isMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || 'ontouchstart' in window));
+    const effectiveCount = isMobile ? Math.max(3, Math.floor(count * 0.45)) : count;
+    const maxCapacity = isMobile ? 36 : 120;
+
+    for (let i = 0; i < effectiveCount; i++) {
+      const angle = (Math.PI * 2 * i) / effectiveCount + (Math.random() - 0.5) * 0.4;
       const spd = speed * (0.6 + Math.random() * 0.8);
       this.particles.push({
         x: x,
@@ -29,10 +33,14 @@ class ParticleSystem {
         vx: Math.cos(angle) * spd,
         vy: Math.sin(angle) * spd,
         color: color,
-        size: 2.5 + Math.random() * 2,
-        life: 0.45,
-        maxLife: 0.45
+        size: isMobile ? (2 + Math.random() * 1.5) : (2.5 + Math.random() * 2),
+        life: 0.42,
+        maxLife: 0.42
       });
+    }
+
+    if (this.particles.length > maxCapacity) {
+      this.particles.splice(0, this.particles.length - maxCapacity);
     }
   }
 
@@ -204,6 +212,22 @@ class Player {
     if (this.freezeTimer > 0) {
       this.freezeTimer -= dt;
       if (this.freezeTimer < 0) this.freezeTimer = 0;
+    }
+
+    // Sprint Ghost Trail: Emit fading silhouettes while moving
+    if (this.isMoving) {
+      this.trailTick = (this.trailTick || 0) + dt;
+      if (this.trailTick >= 0.04) {
+        this.trailTick = 0;
+        this.trail.unshift({
+          x: this.x,
+          y: this.y,
+          alpha: this.speedBoostTimer > 0 ? 0.65 : 0.35
+        });
+        if (this.trail.length > 5) this.trail.pop();
+      }
+    } else {
+      if (this.trail.length > 0) this.trail.pop();
     }
 
     // Update floating texts
@@ -462,12 +486,27 @@ class Player {
       ctx.stroke();
 
       // Orbiting Shield emoji
-      ctx.font = '10px sans-serif';
-      ctx.textAlign = 'center';
       const orbitAngle = time * 0.004;
-      const ox = px + this.width / 2 + Math.cos(orbitAngle) * 19;
-      const oy = py + this.height / 2 + Math.sin(orbitAngle) * 19;
-      ctx.fillText('🛡️', ox, oy);
+      const ox = px + this.width / 2 + Math.cos(orbitAngle) * 20;
+      const oy = py + this.height / 2 + Math.sin(orbitAngle) * 20;
+      ctx.shadowColor = '#06b6d4';
+      ctx.shadowBlur = 10;
+
+      // Crisp Pixel-Art Orbiting Shield Crest
+      ctx.fillStyle = '#06b6d4';
+      ctx.beginPath();
+      ctx.moveTo(ox - 5, oy - 6);
+      ctx.lineTo(ox + 5, oy - 6);
+      ctx.lineTo(ox + 5, oy);
+      ctx.lineTo(ox, oy + 6);
+      ctx.lineTo(ox - 5, oy);
+      ctx.closePath();
+      ctx.fill();
+
+      // Shield Cross Emblem
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(ox - 1, oy - 4, 2, 6);
+      ctx.fillRect(ox - 3, oy - 2, 6, 2);
       ctx.restore();
     }
 
@@ -585,10 +624,32 @@ class AttendanceShieldItem {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Shield emoji
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🛡️', sx + 10, sy + 15);
+    // Pixel-Art Attendance Shield
+    ctx.fillStyle = '#06b6d4';
+    ctx.beginPath();
+    ctx.moveTo(sx + 4, sy + 3);
+    ctx.lineTo(sx + 16, sy + 3);
+    ctx.lineTo(sx + 16, sy + 11);
+    ctx.lineTo(sx + 10, sy + 18);
+    ctx.lineTo(sx + 4, sy + 11);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shield Inner Bevel
+    ctx.fillStyle = '#67e8f9';
+    ctx.beginPath();
+    ctx.moveTo(sx + 6, sy + 5);
+    ctx.lineTo(sx + 14, sy + 5);
+    ctx.lineTo(sx + 14, sy + 10);
+    ctx.lineTo(sx + 10, sy + 15);
+    ctx.lineTo(sx + 6, sy + 10);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shield Emblem Cross
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(sx + 9, sy + 7, 2, 6);
+    ctx.fillRect(sx + 7, sy + 9, 6, 2);
 
     ctx.restore();
   }
@@ -631,10 +692,27 @@ class ProxyAttendanceItem {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Ghost emoji
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('👻', px + 10, py + 15);
+    // Pixel-Art Ethereal Ghost Silhouette
+    ctx.fillStyle = '#c084fc';
+    ctx.beginPath();
+    ctx.arc(px + 10, py + 7, 6, Math.PI, 0);
+    ctx.lineTo(px + 16, py + 15);
+    ctx.lineTo(px + 14, py + 13);
+    ctx.lineTo(px + 12, py + 16);
+    ctx.lineTo(px + 10, py + 13);
+    ctx.lineTo(px + 8, py + 16);
+    ctx.lineTo(px + 6, py + 13);
+    ctx.lineTo(px + 4, py + 15);
+    ctx.closePath();
+    ctx.fill();
+
+    // Glowing Eyes
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(px + 7, py + 6, 2, 3);
+    ctx.fillRect(px + 11, py + 6, 2, 3);
+    ctx.fillStyle = '#67e8f9';
+    ctx.fillRect(px + 7.5, py + 6.5, 1, 1);
+    ctx.fillRect(px + 11.5, py + 6.5, 1, 1);
 
     ctx.restore();
   }
@@ -677,10 +755,25 @@ class EnergyDrinkItem {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Energy bolt emoji / can
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('⚡', ex + 10, ey + 15);
+    // Pixel-Art Neon Energy Drink Can
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillRect(ex + 5, ey + 3, 10, 14);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(ex + 6, ey + 2, 8, 2);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(ex + 6, ey + 4, 2, 12);
+
+    // Glowing Lightning Bolt Emblem
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.moveTo(ex + 11, ey + 5);
+    ctx.lineTo(ex + 8, ey + 10);
+    ctx.lineTo(ex + 10, ey + 10);
+    ctx.lineTo(ex + 9, ey + 14);
+    ctx.lineTo(ex + 13, ey + 9);
+    ctx.lineTo(ex + 11, ey + 9);
+    ctx.closePath();
+    ctx.fill();
 
     ctx.restore();
   }
@@ -723,10 +816,17 @@ class NotesItem {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Notes scroll emoji
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('📝', nx + 10, ny + 15);
+    // Pixel-Art Rolled Study Notes / Cheat Sheet
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(nx + 4, ny + 3, 12, 14);
+    ctx.fillStyle = '#ca8a04';
+    ctx.fillRect(nx + 3, ny + 2, 14, 2);
+    ctx.fillRect(nx + 3, ny + 16, 14, 2);
+    // Formula notes
+    ctx.fillStyle = '#0284c7';
+    ctx.fillRect(nx + 6, ny + 6, 8, 1.5);
+    ctx.fillRect(nx + 6, ny + 9, 8, 1.5);
+    ctx.fillRect(nx + 6, ny + 12, 5, 1.5);
 
     ctx.restore();
   }
@@ -769,10 +869,17 @@ class BunkPassItem {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Snowflake emoji
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('❄️', bx + 10, by + 15);
+    // Pixel-Art Freeze Crystal / Bunk Pass
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(bx + 8, by + 8, 4, 4);
+    ctx.fillRect(bx + 9, by + 3, 2, 14);
+    ctx.fillRect(bx + 3, by + 9, 14, 2);
+    ctx.fillRect(bx + 5, by + 5, 2, 2);
+    ctx.fillRect(bx + 13, by + 5, 2, 2);
+    ctx.fillRect(bx + 5, by + 13, 2, 2);
+    ctx.fillRect(bx + 13, by + 13, 2, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(bx + 9, by + 9, 2, 2);
 
     ctx.restore();
   }
@@ -1405,8 +1512,15 @@ class Enemy {
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(ex - 3, ey - 3, this.width + 6, this.height + 6);
-      ctx.font = '11px sans-serif';
-      ctx.fillText('❄️', ex + this.width / 2 - 5, ey - 5);
+      // Pixel-Art Freeze Ice Crystal over enemy
+      const cx = ex + this.width / 2;
+      const cy = ey - 6;
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(cx - 3, cy - 3, 6, 6);
+      ctx.fillRect(cx - 1, cy - 6, 2, 12);
+      ctx.fillRect(cx - 6, cy - 1, 12, 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx - 1, cy - 1, 2, 2);
       ctx.restore();
     }
 
@@ -1700,9 +1814,21 @@ class AnswerKeyItem {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🔑', ax + 10, ay + 15);
+    // Pixel-Art Master Answer Key
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(ax + 7, ay + 10, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(ax + 7, ay + 10, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(ax + 10, ay + 9, 8, 2.5);
+    ctx.fillRect(ax + 15, ay + 11.5, 2, 3);
+    ctx.fillRect(ax + 17, ay + 11.5, 2, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(ax + 6, ay + 7, 2, 2);
 
     ctx.font = "bold 6px 'Press Start 2P', monospace";
     ctx.fillStyle = '#fef08a';

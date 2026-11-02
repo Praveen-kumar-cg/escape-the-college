@@ -2033,3 +2033,262 @@ body {
   position: absolute;
   pointer-events: none;
 }
+
+
+/* Step 1: Fog, Hero Button, Customize & Credits Modals */
+.fog-drift-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 140px;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 100%, rgba(139, 92, 246, 0.22) 0%, rgba(6, 182, 212, 0.08) 45%, transparent 75%);
+  filter: blur(14px);
+  z-index: 2;
+}
+
+.fog-layer-1 {
+  animation: driftFogSlow 24s linear infinite alternate;
+}
+
+.fog-layer-2 {
+  bottom: -25px;
+  background: radial-gradient(ellipse at 35% 100%, rgba(6, 182, 212, 0.16) 0%, rgba(15, 23, 42, 0.3) 60%, transparent 85%);
+  animation: driftFogReverse 16s linear infinite alternate;
+  filter: blur(18px);
+}
+
+@keyframes driftFogSlow {
+  0% { transform: translateX(0); opacity: 0.55; }
+  50% { opacity: 0.85; }
+  100% { transform: translateX(-25%); opacity: 0.5; }
+}
+
+@keyframes driftFogReverse {
+  0% { transform: translateX(-20%); opacity: 0.45; }
+  50% { opacity: 0.75; }
+  100% { transform: translateX(5%); opacity: 0.55; }
+}
+
+/* Neon Title Flicker Animation */
+@keyframes neonTitleFlicker {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% {
+    text-shadow: 
+      0 0 7px #fef08a,
+      0 0 18px #facc15,
+      0 0 35px #eab308,
+      0 0 50px rgba(234, 179, 8, 0.7);
+    opacity: 1;
+  }
+  19%, 24%, 54% {
+    text-shadow: 0 0 3px rgba(250, 204, 21, 0.3);
+    opacity: 0.72;
+  }
+  20%, 56% {
+    text-shadow: none;
+    opacity: 0.48;
+  }
+}
+
+.neon-title {
+  animation: neonTitleFlicker 7s infinite ease-in-out;
+}
+
+/* Large Hero Start Button */
+.hero-start-btn {
+  width: 100%;
+  font-size: 1.15rem !important;
+  padding: 18px 36px !important;
+  letter-spacing: 1.5px;
+  box-shadow: 0 0 25px rgba(250, 204, 21, 0.5), inset 0 0 12px rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Daily Challenge as distinct Secondary button */
+.daily-challenge-btn {
+  width: 100%;
+  background: rgba(168, 85, 247, 0.16) !important;
+  border: 2px solid #a855f7 !important;
+  color: #d8b4fe !important;
+  font-size: 0.85rem !important;
+  padding: 13px 20px !important;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.25) !important;
+  transition: all 0.2s ease;
+}
+
+.daily-challenge-btn:hover {
+  background: rgba(168, 85, 247, 0.28) !important;
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.5) !important;
+  transform: translateY(-2px);
+}
+
+/* Customize Card Modal */
+.customize-card {
+  max-width: 520px;
+}
+
+.customize-body {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Credits Card Modal */
+.credits-card {
+  max-width: 480px;
+  text-align: center;
+}
+
+.credits-hero {
+  font-family: var(--font-retro);
+  font-size: 1rem;
+  color: #facc15;
+  margin: 14px 0 6px 0;
+}
+
+.pixelrush-badge {
+  color: #06b6d4;
+  text-shadow: 0 0 8px rgba(6, 182, 212, 0.8);
+  font-weight: bold;
+}
+
+.credits-tagline {
+  font-style: italic;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 18px;
+}
+
+.credits-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 14px 18px;
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.credit-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.c-role {
+  color: #94a3b8;
+}
+
+.c-name {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.credits-disclaimer {
+  font-family: var(--font-retro);
+  font-size: 0.65rem;
+  color: #fbbf24;
+  line-height: 1.4;
+}
+
+
+/* Step 3: Low-Health Vignette Pulse & Smooth Screen Transitions */
+.flash-overlay.low-health-active {
+  opacity: 1 !important;
+  box-shadow: inset 0 0 60px 18px rgba(239, 68, 68, 0.45) !important;
+  animation: pulseLowHealth 0.85s infinite ease-in-out !important;
+  pointer-events: none !important;
+}
+
+@keyframes pulseLowHealth {
+  0%, 100% {
+    box-shadow: inset 0 0 45px 14px rgba(239, 68, 68, 0.32);
+    opacity: 0.65;
+  }
+  50% {
+    box-shadow: inset 0 0 75px 28px rgba(239, 68, 68, 0.72);
+    opacity: 1;
+  }
+}
+
+/* Red Edge Damage Flash */
+.flash-overlay.flash-active {
+  box-shadow: inset 0 0 80px 30px rgba(239, 68, 68, 0.8) !important;
+  opacity: 1 !important;
+  transition: opacity 0.08s ease-out !important;
+}
+
+/* Screen Transitions */
+.screen {
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.game-modal-overlay {
+  transition: opacity 0.22s ease-out;
+}
+
+.game-modal-overlay .modal-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease-out;
+}
+
+
+/* Step 4: In-Game Onboarding Hint Toast & Audio Gate */
+.hud-hint-toast {
+  position: absolute;
+  top: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(7, 11, 25, 0.94);
+  border: 1.5px solid #06b6d4;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.45);
+  color: #f8fafc;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: var(--font-retro);
+  font-size: 0.65rem;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+  z-index: 48;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: hintSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.hud-hint-toast.hint-fade-out {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+@keyframes hintSlideDown {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-14px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.audio-gate-banner {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #facc15;
+  color: #fef08a;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-family: var(--font-retro);
+  font-size: 0.6rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  z-index: 60;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.3);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.audio-gate-banner:hover {
+  background: rgba(250, 204, 21, 0.2);
+}
