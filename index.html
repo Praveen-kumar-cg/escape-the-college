@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
   
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3.1">
 </head>
 <body>
   <div id="app-container">
@@ -66,7 +66,7 @@
           </div>
         </div>
 
-        <button id="btn-close-how-to-play" class="primary-btn" type="button">⚡ GOT IT!</button>
+        <button id="btn-close-how-to-play" class="primary-btn" type="button" onclick="window.closeHowToPlayModal && window.closeHowToPlayModal()">⚡ GOT IT!</button>
       </div>
     </div>
 
@@ -158,7 +158,7 @@
             </div>
 
             <div class="modal-actions">
-              <button id="btn-close-stats" class="primary-btn" type="button">⚡ CLOSE</button>
+              <button id="btn-close-stats" class="primary-btn" type="button" onclick="window.closeStatsModal && window.closeStatsModal()">⚡ CLOSE</button>
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@
             </div>
 
             <div class="modal-actions">
-              <button id="btn-close-settings" class="primary-btn" type="button">⚡ SAVE &amp; CLOSE</button>
+              <button id="btn-close-settings" class="primary-btn" type="button" onclick="window.closeSettingsModal && window.closeSettingsModal()">⚡ SAVE &amp; CLOSE</button>
             </div>
           </div>
         </div>
@@ -350,40 +350,40 @@
             <div class="menu-setting-group">
               <span class="setting-label">DIFFICULTY:</span>
               <div class="difficulty-picker" id="difficulty-picker">
-                <button class="diff-btn" data-diff="fresher" type="button">Fresher</button>
-                <button class="diff-btn active" data-diff="backbencher" type="button">Backbencher</button>
-                <button class="diff-btn" data-diff="topper" type="button">Topper</button>
-                <button class="diff-btn" data-diff="final_year" type="button">Final Year</button>
+                <button class="diff-btn" data-diff="fresher" type="button" onclick="window.selectDifficulty && window.selectDifficulty('fresher')">Fresher</button>
+                <button class="diff-btn active" data-diff="backbencher" type="button" onclick="window.selectDifficulty && window.selectDifficulty('backbencher')">Backbencher</button>
+                <button class="diff-btn" data-diff="topper" type="button" onclick="window.selectDifficulty && window.selectDifficulty('topper')">Topper</button>
+                <button class="diff-btn" data-diff="final_year" type="button" onclick="window.selectDifficulty && window.selectDifficulty('final_year')">Final Year</button>
               </div>
               <label class="one-hit-label" title="One strike from an enemy or projectile ends the run!">
-                <input type="checkbox" id="one-hit-checkbox"> 💀 One-Hit Ends Run
+                <input type="checkbox" id="one-hit-checkbox" onchange="window.toggleOneHit && window.toggleOneHit(this.checked)"> 💀 One-Hit Ends Run
               </label>
             </div>
 
             <div class="menu-setting-group">
               <span class="setting-label">STUDENT SKIN:</span>
               <div class="skin-picker" id="skin-picker">
-                <button class="skin-btn active" data-skin="hoodie" type="button" title="Classic Cyan Hoodie">🧥 Hoodie</button>
-                <button class="skin-btn" data-skin="topper" type="button" title="Gold Scholar Robe & Mortarboard">🎓 Topper</button>
-                <button class="skin-btn" data-skin="ninja" type="button" title="Stealth Midnight Shinobi">🥷 Ninja</button>
+                <button class="skin-btn active" data-skin="hoodie" type="button" title="Classic Cyan Hoodie" onclick="window.selectSkin && window.selectSkin('hoodie')">🧥 Hoodie</button>
+                <button class="skin-btn" data-skin="topper" type="button" title="Gold Scholar Robe & Mortarboard" onclick="window.selectSkin && window.selectSkin('topper')">🎓 Topper</button>
+                <button class="skin-btn" data-skin="ninja" type="button" title="Stealth Midnight Shinobi" onclick="window.selectSkin && window.selectSkin('ninja')">🥷 Ninja</button>
               </div>
             </div>
           </div>
 
           <!-- Menu Action Buttons -->
           <div class="menu-actions-stack">
-            <button id="start-escape-btn" class="primary-btn pulse-glow" type="button">
+            <button id="start-escape-btn" class="primary-btn pulse-glow" type="button" onclick="window.startEscapeGame && window.startEscapeGame()">
               <span class="btn-icon">⚡</span> START ESCAPE
             </button>
-            <button id="start-daily-btn" class="primary-btn daily-challenge-btn" type="button">
+            <button id="start-daily-btn" class="primary-btn daily-challenge-btn" type="button" onclick="window.startDailyChallenge && window.startDailyChallenge()">
               <span class="btn-icon">📅</span> DAILY CHALLENGE
             </button>
             
             <div class="secondary-actions-row">
-              <button id="btn-how-to-play" class="secondary-btn menu-sec-btn" type="button">📖 How to Play</button>
-              <button id="btn-menu-sound" class="secondary-btn menu-sec-btn" type="button">🔊 Sound: On</button>
-              <button id="btn-menu-stats" class="secondary-btn menu-sec-btn" type="button">🏆 Stats &amp; Badges</button>
-              <button id="btn-menu-settings" class="secondary-btn menu-sec-btn" type="button">⚙️ Settings</button>
+              <button id="btn-how-to-play" class="secondary-btn menu-sec-btn" type="button" onclick="window.openHowToPlayModal && window.openHowToPlayModal()">📖 How to Play</button>
+              <button id="btn-menu-sound" class="secondary-btn menu-sec-btn" type="button" onclick="window.toggleSound && window.toggleSound()">🔊 Sound: On</button>
+              <button id="btn-menu-stats" class="secondary-btn menu-sec-btn" type="button" onclick="window.openStatsModal && window.openStatsModal()">🏆 Stats &amp; Badges</button>
+              <button id="btn-menu-settings" class="secondary-btn menu-sec-btn" type="button" onclick="window.openSettingsModal && window.openSettingsModal()">⚙️ Settings</button>
             </div>
           </div>
         </div>
@@ -630,15 +630,17 @@
   </div>
 
   <!-- Modular Scripts loaded in sequence -->
-  <script src="js/audio.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/entities.js"></script>
-  <script src="js/game.js"></script>
+  <script src="js/audio.js?v=3.1"></script>
+  <script src="js/map.js?v=3.1"></script>
+  <script src="js/entities.js?v=3.1"></script>
+  <script src="js/game.js?v=3.1"></script>
   <!-- Service Worker Registration for PWA Offline Play -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=3.1').then((reg) => {
+          reg.update().catch(() => {});
+        }).catch(() => {});
       });
     }
   </script>

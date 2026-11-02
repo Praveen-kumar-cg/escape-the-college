@@ -813,8 +813,177 @@ class EscapeGame {
   }
 
 
+  // Explicit Modal Open/Close Handlers
+  startEscape() {
+    if (this.isStarting) return;
+    this.isStarting = true;
+    this.isDailyChallenge = false;
+
+    if (window.soundManager) {
+      window.soundManager.init();
+      window.soundManager.playClockChime();
+    }
+
+    const flash = document.getElementById('start-flash-overlay');
+    if (flash) flash.classList.add('flash-active');
+    this.startScreen.classList.add('start-fade-out');
+
+    setTimeout(() => {
+      if (flash) flash.classList.remove('flash-active');
+      this.startScreen.classList.remove('start-fade-out');
+
+      if (window.soundManager) window.soundManager.startBgm();
+      this.playIntroCutscene(() => {
+        this.startLevel(1);
+        this.isStarting = false;
+      });
+    }, 650);
+  }
+
+  openHowToPlay() {
+    const htpModal = document.getElementById('how-to-play-modal');
+    if (htpModal) htpModal.classList.remove('hidden');
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  closeHowToPlay() {
+    const htpModal = document.getElementById('how-to-play-modal');
+    if (htpModal) htpModal.classList.add('hidden');
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  toggleSound() {
+    if (!window.soundManager) return;
+    const isMuted = window.soundManager.toggleMute();
+    const menuSoundBtn = document.getElementById('btn-menu-sound');
+    const hudSoundBtn = document.getElementById('btn-sound-toggle');
+    const btnSettingSound = document.getElementById('btn-setting-sound');
+    if (menuSoundBtn) menuSoundBtn.textContent = isMuted ? '🔇 Sound: Off' : '🔊 Sound: On';
+    if (hudSoundBtn) {
+      hudSoundBtn.textContent = isMuted ? '🔇' : '🔊';
+      hudSoundBtn.title = isMuted ? 'Unmute Sound' : 'Mute Sound';
+    }
+    if (btnSettingSound) btnSettingSound.textContent = isMuted ? "Sound: OFF" : "Sound: ON";
+    if (window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  setDifficulty(diff) {
+    this.difficulty = diff;
+    const diffButtons = (typeof document !== 'undefined' && document.querySelectorAll) ? document.querySelectorAll('.diff-btn') : [];
+    diffButtons.forEach(b => {
+      if (b.dataset.diff === diff) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+    try { localStorage.setItem('etc_difficulty', this.difficulty); } catch (e) {}
+
+    const oneHitCheck = document.getElementById('one-hit-checkbox');
+    if (this.difficulty === 'final_year') {
+      this.oneHitElimination = true;
+      if (oneHitCheck) oneHitCheck.checked = true;
+      try { localStorage.setItem('etc_one_hit', 'true'); } catch (e) {}
+    }
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  setSkin(skin) {
+    this.selectedSkin = skin;
+    const skinButtons = (typeof document !== 'undefined' && document.querySelectorAll) ? document.querySelectorAll('.skin-btn') : [];
+    skinButtons.forEach(b => {
+      if (b.dataset.skin === skin) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+    if (this.player) this.player.skin = this.selectedSkin;
+    try { localStorage.setItem('etc_skin', this.selectedSkin); } catch (e) {}
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  setOneHit(enabled) {
+    this.oneHitElimination = !!enabled;
+    const oneHitCheck = document.getElementById('one-hit-checkbox');
+    if (oneHitCheck) oneHitCheck.checked = this.oneHitElimination;
+    try { localStorage.setItem('etc_one_hit', this.oneHitElimination.toString()); } catch (err) {}
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  openStats() {
+    const statsModal = document.getElementById('stats-modal');
+    if (statsModal) statsModal.classList.remove('hidden');
+    this.updateStatsModal();
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  closeStats() {
+    const statsModal = document.getElementById('stats-modal');
+    if (statsModal) statsModal.classList.add('hidden');
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  openSettings() {
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal) settingsModal.classList.remove('hidden');
+    try {
+      const volSlider = document.getElementById('volume-slider');
+      const volDisplay = document.getElementById('volume-val-display');
+      const btnSettingSound = document.getElementById('btn-setting-sound');
+      const btnSettingShake = document.getElementById('btn-setting-shake');
+
+      if (volSlider && window.soundManager) {
+        volSlider.value = Math.round((window.soundManager.masterVolume || 1.0) * 100);
+        if (volDisplay) volDisplay.textContent = `${volSlider.value}%`;
+      }
+      if (btnSettingSound && window.soundManager) {
+        btnSettingSound.textContent = window.soundManager.muted ? "Sound: OFF" : "Sound: ON";
+      }
+      if (btnSettingShake) {
+        btnSettingShake.textContent = this.screenShakeEnabled ? "Shake: ON" : "Shake: OFF";
+      }
+    } catch (e) {}
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  closeSettings() {
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal) settingsModal.classList.add('hidden');
+    if (window.soundManager && window.soundManager.playClick) window.soundManager.playClick();
+  }
+
+  startDailyChallenge() {
+    if (this.isStarting) return;
+    this.isStarting = true;
+    this.isDailyChallenge = true;
+    this.dailyPRNG = this.createPRNG(this.getDailySeed());
+
+    if (window.soundManager) {
+      window.soundManager.init();
+      window.soundManager.playClockChime();
+    }
+
+    const flash = document.getElementById('start-flash-overlay');
+    if (flash) flash.classList.add('flash-active');
+    this.startScreen.classList.add('start-fade-out');
+
+    setTimeout(() => {
+      if (flash) flash.classList.remove('flash-active');
+      this.startScreen.classList.remove('start-fade-out');
+      if (window.soundManager) window.soundManager.startBgm();
+      this.startLevel(1);
+      this.isStarting = false;
+    }, 500);
+  }
+
   updateStatsModal() {
-    const elBestScore = document.getElementById('stat-best-score');
+    try {
+      this.stats = (this.stats && typeof this.stats === 'object' && !Array.isArray(this.stats)) ? this.stats : {
+        bestScore: 0,
+        bestTime: null,
+        totalWins: 0,
+        totalDeaths: 0,
+        totalKeys: 0,
+        totalRuns: 0
+      };
+      this.achievements = Array.isArray(this.achievements) ? this.achievements : [];
+
+      const elBestScore = document.getElementById('stat-best-score');
     const elBestTime = document.getElementById('stat-best-time');
     const elWins = document.getElementById('stat-total-wins');
     const elDeaths = document.getElementById('stat-total-deaths');
@@ -848,6 +1017,9 @@ class EscapeGame {
         }
       }
     });
+    } catch (err) {
+      console.warn('Error updating stats modal:', err);
+    }
   }
 
   initVirtualJoystick() {
@@ -2228,7 +2400,89 @@ class EscapeGame {
   }
 }
 
-// Instantiate game when DOM is ready
-window.addEventListener('DOMContentLoaded', () => {
-  window.escapeGame = new EscapeGame();
-});
+// Global Helpers for direct button triggers
+window.startEscapeGame = () => {
+  if (window.escapeGame) window.escapeGame.startEscape();
+};
+
+window.startDailyChallenge = () => {
+  if (window.escapeGame) window.escapeGame.startDailyChallenge();
+};
+
+window.openHowToPlayModal = () => {
+  if (window.escapeGame) window.escapeGame.openHowToPlay();
+  else {
+    const m = document.getElementById('how-to-play-modal');
+    if (m) m.classList.remove('hidden');
+  }
+};
+
+window.closeHowToPlayModal = () => {
+  if (window.escapeGame) window.escapeGame.closeHowToPlay();
+  else {
+    const m = document.getElementById('how-to-play-modal');
+    if (m) m.classList.add('hidden');
+  }
+};
+
+window.toggleSound = () => {
+  if (window.escapeGame) window.escapeGame.toggleSound();
+  else if (window.soundManager) window.soundManager.toggleMute();
+};
+
+window.openStatsModal = () => {
+  if (window.escapeGame) window.escapeGame.openStats();
+  else {
+    const m = document.getElementById('stats-modal');
+    if (m) m.classList.remove('hidden');
+  }
+};
+
+window.closeStatsModal = () => {
+  if (window.escapeGame) window.escapeGame.closeStats();
+  else {
+    const m = document.getElementById('stats-modal');
+    if (m) m.classList.add('hidden');
+  }
+};
+
+window.openSettingsModal = () => {
+  if (window.escapeGame) window.escapeGame.openSettings();
+  else {
+    const m = document.getElementById('settings-modal');
+    if (m) m.classList.remove('hidden');
+  }
+};
+
+window.closeSettingsModal = () => {
+  if (window.escapeGame) window.escapeGame.closeSettings();
+  else {
+    const m = document.getElementById('settings-modal');
+    if (m) m.classList.add('hidden');
+  }
+};
+
+window.selectDifficulty = (diff) => {
+  if (window.escapeGame) window.escapeGame.setDifficulty(diff);
+};
+
+window.selectSkin = (skin) => {
+  if (window.escapeGame) window.escapeGame.setSkin(skin);
+};
+
+window.toggleOneHit = (checked) => {
+  if (window.escapeGame) window.escapeGame.setOneHit(checked);
+};
+
+// Robust instantiation: Checks if DOM is already parsed (handles cached / interactive readyState)
+function initEscapeGame() {
+  if (!window.escapeGame) {
+    window.escapeGame = new EscapeGame();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initEscapeGame);
+} else {
+  initEscapeGame();
+}
